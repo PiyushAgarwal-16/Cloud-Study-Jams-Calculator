@@ -40,11 +40,6 @@ class SkillsBoostCalculator {
             this.resetForm();
         });
 
-        // Export button
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            this.exportResults();
-        });
-
         // URL input validation
         document.getElementById('profileUrl').addEventListener('input', (e) => {
             this.validateProfileUrl(e.target);
@@ -155,17 +150,12 @@ class SkillsBoostCalculator {
         this.hideError();
 
         // Update summary
-        document.getElementById('totalPoints').textContent = results.totalPoints.toLocaleString();
         document.getElementById('completedBadgesCount').textContent = results.completedBadges.length;
         document.getElementById('completedGamesCount').textContent = results.completedGames.length;
         document.getElementById('overallProgress').textContent = results.progress.overall.percentage + '%';
 
         // Update progress bars
         this.updateProgressBars(results.progress);
-
-        // Update points breakdown
-        document.getElementById('badgePoints').textContent = results.breakdown.badges.points.toLocaleString();
-        document.getElementById('gamePoints').textContent = results.breakdown.games.points.toLocaleString();
 
         // Update tab counts
         document.getElementById('badgeTabCount').textContent = results.breakdown.badges.count;
@@ -246,7 +236,6 @@ class SkillsBoostCalculator {
             <div class="item-header">
                 <span class="item-icon">${icon}</span>
                 <h4 class="item-title">${this.escapeHtml(item.title)}</h4>
-                <span class="item-points">+${item.points}</span>
             </div>
             <div class="item-details">
                 <span class="item-category ${categoryClass}">${this.formatCategory(item.category)}</span>
@@ -285,37 +274,6 @@ class SkillsBoostCalculator {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    /**
-     * Export results to JSON file
-     */
-    exportResults() {
-        if (!this.currentResults) {
-            this.showError('No results to export');
-            return;
-        }
-
-        try {
-            const exportData = {
-                ...this.currentResults,
-                exportedAt: new Date().toISOString(),
-                exportVersion: '1.0'
-            };
-
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(dataBlob);
-            link.download = `skills-boost-results-${new Date().toISOString().split('T')[0]}.json`;
-            link.click();
-
-            URL.revokeObjectURL(link.href);
-        } catch (error) {
-            console.error('Export error:', error);
-            this.showError('Failed to export results');
-        }
     }
 
     /**

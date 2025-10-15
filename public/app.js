@@ -241,9 +241,6 @@ class SkillsBoostCalculator {
                 <span class="item-category ${categoryClass}">${this.formatCategory(item.category)}</span>
                 <span class="item-difficulty ${difficultyClass}">${this.formatDifficulty(item.difficulty)}</span>
             </div>
-            <div class="item-scoring">
-                <span class="scoring-detail">Base: ${item.basePoints} × ${item.multiplier.toFixed(2)}</span>
-            </div>
         `;
 
         return element;

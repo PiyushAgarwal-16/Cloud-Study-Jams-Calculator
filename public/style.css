@@ -93,9 +93,31 @@ body {
 }
 
 .subtitle {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-sm);
     opacity: 0.9;
     font-weight: 300;
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.creator {
+    font-size: var(--font-size-sm);
+    opacity: 0.95;
+    font-weight: 400;
+    margin-top: var(--spacing-sm);
+}
+
+.creator a {
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: border-color var(--transition-fast);
+}
+
+.creator a:hover {
+    border-bottom-color: var(--white);
 }
 
 .main {

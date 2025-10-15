@@ -1,0 +1,493 @@
+/**
+ * Google Cloud Skills Boost Calculator - Frontend JavaScript
+ * Handles user interactions and API communication
+ */
+
+class SkillsBoostCalculator {
+    constructor() {
+        this.apiBaseUrl = window.location.origin + '/api';
+        this.currentResults = null;
+        this.init();
+    }
+
+    /**
+     * Initialize the application
+     */
+    init() {
+        this.bindEvents();
+        this.setupTabSwitching();
+        console.log('🚀 Google Cloud Skills Boost Calculator initialized');
+    }
+
+    /**
+     * Bind event listeners
+     */
+    bindEvents() {
+        // Form submission
+        document.getElementById('profileForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.calculatePoints();
+        });
+
+        // Retry button
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            this.hideError();
+            this.showInputSection();
+        });
+
+        // New calculation button
+        document.getElementById('newCalculationBtn').addEventListener('click', () => {
+            this.resetForm();
+        });
+
+        // Export button
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            this.exportResults();
+        });
+
+        // URL input validation
+        document.getElementById('profileUrl').addEventListener('input', (e) => {
+            this.validateProfileUrl(e.target);
+        });
+    }
+
+    /**
+     * Setup tab switching functionality
+     */
+    setupTabSwitching() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+
+                // Remove active class from all buttons and panels
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabPanels.forEach(panel => panel.classList.remove('active'));
+
+                // Add active class to clicked button and corresponding panel
+                button.classList.add('active');
+                document.getElementById(targetTab + 'Tab').classList.add('active');
+            });
+        });
+    }
+
+    /**
+     * Validate profile URL format
+     */
+    validateProfileUrl(input) {
+        const url = input.value.trim();
+        const isValid = this.isValidProfileUrl(url);
+        
+        if (url && !isValid) {
+            input.setCustomValidity('Please enter a valid Google Cloud Skills Boost profile URL');
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    /**
+     * Check if URL is a valid profile URL
+     */
+    isValidProfileUrl(url) {
+        if (!url) return false;
+        
+        const pattern = /^https?:\/\/(www\.)?cloudskillsboost\.google\/public_profiles\/[a-zA-Z0-9\-_]+/i;
+        return pattern.test(url);
+    }
+
+    /**
+     * Main function to calculate points
+     */
+    async calculatePoints() {
+        const profileUrl = document.getElementById('profileUrl').value.trim();
+
+        if (!profileUrl) {
+            this.showError('Please enter a profile URL');
+            return;
+        }
+
+        if (!this.isValidProfileUrl(profileUrl)) {
+            this.showError('Please enter a valid Google Cloud Skills Boost profile URL');
+            return;
+        }
+
+        try {
+            this.showLoading();
+            this.updateLoadingStatus('Verifying enrollment...');
+
+            const response = await fetch(`${this.apiBaseUrl}/calculate-points`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ profileUrl })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            this.updateLoadingStatus('Fetching profile data...');
+            const results = await response.json();
+
+            this.updateLoadingStatus('Calculating points...');
+            
+            // Simulate processing delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            this.currentResults = results;
+            this.displayResults(results);
+
+        } catch (error) {
+            console.error('Error calculating points:', error);
+            this.showError(error.message || 'An error occurred while calculating points');
+        }
+    }
+
+    /**
+     * Display calculation results
+     */
+    displayResults(results) {
+        this.hideLoading();
+        this.hideError();
+
+        // Display participant information if available
+        if (results.participant) {
+            this.displayParticipantInfo(results.participant);
+        }
+
+        // Update summary
+        document.getElementById('totalPoints').textContent = results.totalPoints.toLocaleString();
+        document.getElementById('completedBadgesCount').textContent = results.completedBadges.length;
+        document.getElementById('completedGamesCount').textContent = results.completedGames.length;
+        document.getElementById('overallProgress').textContent = results.progress.overall.percentage + '%';
+
+        // Update progress bars
+        this.updateProgressBars(results.progress);
+
+        // Update points breakdown
+        document.getElementById('badgePoints').textContent = results.breakdown.badges.points.toLocaleString();
+        document.getElementById('gamePoints').textContent = results.breakdown.games.points.toLocaleString();
+        document.getElementById('bonusPoints').textContent = results.breakdown.bonuses.points.toLocaleString();
+
+        // Update tab counts
+        document.getElementById('badgeTabCount').textContent = results.breakdown.badges.count;
+        document.getElementById('gameTabCount').textContent = results.breakdown.games.count;
+        document.getElementById('bonusTabCount').textContent = results.breakdown.bonuses.items.length;
+
+        // Populate item lists
+        this.populateBadgesList(results.breakdown.badges.items);
+        this.populateGamesList(results.breakdown.games.items);
+        this.populateBonusesList(results.breakdown.bonuses.items);
+
+        this.showResults();
+    }
+
+    /**
+     * Update progress bars
+     */
+    updateProgressBars(progress) {
+        // Badge progress
+        const badgePercentage = progress.badges.percentage;
+        document.getElementById('badgeProgress').textContent = `${progress.badges.completed}/${progress.badges.total}`;
+        document.getElementById('badgeProgressBar').style.width = badgePercentage + '%';
+
+        // Game progress
+        const gamePercentage = progress.games.percentage;
+        document.getElementById('gameProgress').textContent = `${progress.games.completed}/${progress.games.total}`;
+        document.getElementById('gameProgressBar').style.width = gamePercentage + '%';
+    }
+
+    /**
+     * Populate badges list
+     */
+    populateBadgesList(badges) {
+        const container = document.getElementById('badgesList');
+        container.innerHTML = '';
+
+        if (badges.length === 0) {
+            container.innerHTML = '<p class="empty-state">No completed badges found</p>';
+            return;
+        }
+
+        badges.forEach(badge => {
+            const item = this.createItemElement(badge, 'badge');
+            container.appendChild(item);
+        });
+    }
+
+    /**
+     * Populate games list
+     */
+    populateGamesList(games) {
+        const container = document.getElementById('gamesList');
+        container.innerHTML = '';
+
+        if (games.length === 0) {
+            container.innerHTML = '<p class="empty-state">No completed games found</p>';
+            return;
+        }
+
+        games.forEach(game => {
+            const item = this.createItemElement(game, 'game');
+            container.appendChild(item);
+        });
+    }
+
+    /**
+     * Populate bonuses list
+     */
+    populateBonusesList(bonuses) {
+        const container = document.getElementById('bonusesList');
+        container.innerHTML = '';
+
+        if (bonuses.length === 0) {
+            container.innerHTML = '<p class="empty-state">No bonus points earned</p>';
+            return;
+        }
+
+        bonuses.forEach(bonus => {
+            const item = this.createBonusElement(bonus);
+            container.appendChild(item);
+        });
+    }
+
+    /**
+     * Create item element for badges and games
+     */
+    createItemElement(item, type) {
+        const element = document.createElement('div');
+        element.className = 'item-card';
+
+        const icon = type === 'badge' ? '🏆' : '🎮';
+        const difficultyClass = `difficulty-${item.difficulty}`;
+        const categoryClass = `category-${item.category}`;
+
+        element.innerHTML = `
+            <div class="item-header">
+                <span class="item-icon">${icon}</span>
+                <h4 class="item-title">${this.escapeHtml(item.title)}</h4>
+                <span class="item-points">+${item.points}</span>
+            </div>
+            <div class="item-details">
+                <span class="item-category ${categoryClass}">${this.formatCategory(item.category)}</span>
+                <span class="item-difficulty ${difficultyClass}">${this.formatDifficulty(item.difficulty)}</span>
+            </div>
+            <div class="item-scoring">
+                <span class="scoring-detail">Base: ${item.basePoints} × ${item.multiplier.toFixed(2)}</span>
+            </div>
+        `;
+
+        return element;
+    }
+
+    /**
+     * Create bonus element
+     */
+    createBonusElement(bonus) {
+        const element = document.createElement('div');
+        element.className = 'bonus-card';
+
+        element.innerHTML = `
+            <div class="bonus-header">
+                <span class="bonus-icon">🎁</span>
+                <h4 class="bonus-title">${this.escapeHtml(bonus.description || bonus.type)}</h4>
+                <span class="bonus-points">+${bonus.points}</span>
+            </div>
+            <div class="bonus-type">
+                <span class="type-badge">${this.formatBonusType(bonus.type)}</span>
+            </div>
+        `;
+
+        return element;
+    }
+
+    /**
+     * Format category name for display
+     */
+    formatCategory(category) {
+        return category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    /**
+     * Format difficulty name for display
+     */
+    formatDifficulty(difficulty) {
+        return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+    }
+
+    /**
+     * Format bonus type for display
+     */
+    formatBonusType(type) {
+        return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Export results to JSON file
+     */
+    exportResults() {
+        if (!this.currentResults) {
+            this.showError('No results to export');
+            return;
+        }
+
+        try {
+            const exportData = {
+                ...this.currentResults,
+                exportedAt: new Date().toISOString(),
+                exportVersion: '1.0'
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `skills-boost-results-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            URL.revokeObjectURL(link.href);
+        } catch (error) {
+            console.error('Export error:', error);
+            this.showError('Failed to export results');
+        }
+    }
+
+    /**
+     * UI State Management Methods
+     */
+
+    showLoading() {
+        this.hideAllSections();
+        document.getElementById('loadingSection').style.display = 'block';
+    }
+
+    hideLoading() {
+        document.getElementById('loadingSection').style.display = 'none';
+    }
+
+    updateLoadingStatus(message) {
+        document.getElementById('loadingStatus').textContent = message;
+    }
+
+    showError(message) {
+        this.hideAllSections();
+        document.getElementById('errorMessage').textContent = message;
+        document.getElementById('errorSection').style.display = 'block';
+    }
+
+    hideError() {
+        document.getElementById('errorSection').style.display = 'none';
+    }
+
+    showResults() {
+        this.hideAllSections();
+        document.getElementById('resultsSection').style.display = 'block';
+    }
+
+    showInputSection() {
+        this.hideAllSections();
+        document.querySelector('.input-section').style.display = 'block';
+    }
+
+    hideAllSections() {
+        const sections = ['loadingSection', 'errorSection', 'resultsSection'];
+        sections.forEach(sectionId => {
+            document.getElementById(sectionId).style.display = 'none';
+        });
+    }
+
+    /**
+     * Display participant information
+     */
+    displayParticipantInfo(participant) {
+        // Find or create participant info section
+        let participantSection = document.getElementById('participantInfo');
+        
+        if (!participantSection) {
+            // Create participant info section
+            participantSection = document.createElement('div');
+            participantSection.id = 'participantInfo';
+            participantSection.className = 'card participant-card';
+            
+            // Insert before results section
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.insertBefore(participantSection, resultsSection.firstChild);
+        }
+
+        participantSection.innerHTML = `
+            <h3>👤 Participant Information</h3>
+            <div class="participant-details">
+                <div class="participant-item">
+                    <span class="participant-label">ID:</span>
+                    <span class="participant-value">${this.escapeHtml(participant.id || 'N/A')}</span>
+                </div>
+                <div class="participant-item">
+                    <span class="participant-label">Name:</span>
+                    <span class="participant-value">${this.escapeHtml(participant.name || 'N/A')}</span>
+                </div>
+                <div class="participant-item">
+                    <span class="participant-label">Batch:</span>
+                    <span class="participant-value">${this.escapeHtml(participant.batch || 'N/A')}</span>
+                </div>
+                <div class="participant-item">
+                    <span class="participant-label">Enrollment Date:</span>
+                    <span class="participant-value">${this.formatDate(participant.enrollmentDate)}</span>
+                </div>
+                <div class="participant-item">
+                    <span class="participant-label">Status:</span>
+                    <span class="participant-value status-${participant.status || 'unknown'}">${this.escapeHtml(participant.status || 'Unknown')}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Format date for display
+     */
+    formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (error) {
+            return 'Invalid Date';
+        }
+    }
+
+    resetForm() {
+        document.getElementById('profileForm').reset();
+        this.currentResults = null;
+        
+        // Remove participant info section
+        const participantSection = document.getElementById('participantInfo');
+        if (participantSection) {
+            participantSection.remove();
+        }
+        
+        this.showInputSection();
+    }
+}
+
+// Initialize the application when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new SkillsBoostCalculator();
+});

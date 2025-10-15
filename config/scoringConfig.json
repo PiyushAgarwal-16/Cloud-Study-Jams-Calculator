@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-10-15T00:00:00.000Z",
+  "badges": {
+    "cloud-storage": { "points": 100, "multiplier": 1.0 },
+    "compute-engine": { "points": 120, "multiplier": 1.0 },
+    "kubernetes": { "points": 150, "multiplier": 1.2 },
+    "big-data": { "points": 140, "multiplier": 1.1 },
+    "machine-learning": { "points": 160, "multiplier": 1.3 },
+    "security": { "points": 130, "multiplier": 1.1 },
+    "networking": { "points": 110, "multiplier": 1.0 },
+    "data": { "points": 125, "multiplier": 1.0 },
+    "application": { "points": 115, "multiplier": 1.0 },
+    "development": { "points": 105, "multiplier": 1.0 },
+    "general": { "points": 100, "multiplier": 1.0 }
+  },
+  "games": {
+    "cloud-quest": { "points": 50, "multiplier": 1.0 },
+    "arcade-game": { "points": 30, "multiplier": 0.8 },
+    "challenge": { "points": 80, "multiplier": 1.2 },
+    "general": { "points": 40, "multiplier": 1.0 }
+  },
+  "difficulty": {
+    "beginner": 1.0,
+    "intermediate": 1.2,
+    "advanced": 1.5
+  },
+  "bonuses": {
+    "completion_streak": {
+      "5_streak": 50,
+      "10_streak": 150,
+      "20_streak": 400
+    },
+    "category_completion": {
+      "category_bonus": 200
+    },
+    "time_bonus": {
+      "recent_completion": 25
+    }
+  },
+  "specificItems": {
+    "badges": {
+      "Google Cloud Digital Leader": { "points": 200, "multiplier": 1.5 },
+      "Google Cloud Architect": { "points": 300, "multiplier": 2.0 },
+      "Professional Cloud Developer": { "points": 250, "multiplier": 1.8 },
+      "Associate Cloud Engineer": { "points": 220, "multiplier": 1.6 }
+    },
+    "games": {
+      "Cloud Hero Challenge": { "points": 100, "multiplier": 1.5 },
+      "Arcade Quest Complete": { "points": 75, "multiplier": 1.3 }
+    }
+  },
+  "limits": {
+    "max_badge_points": 500,
+    "max_game_points": 200,
+    "max_bonus_points": 1000
+  }
+}

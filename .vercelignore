@@ -1,0 +1,12 @@
+node_modules
+.env
+.env.local
+tests
+*.test.js
+.vscode
+.github
+debug-*.html
+debug-*.json
+*.log
+.DS_Store
+COUNTING-ISSUE-FIXED.md

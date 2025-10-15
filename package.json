@@ -7,7 +7,11 @@
     "start": "node server/server.js",
     "dev": "nodemon server/server.js",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "vercel-build": "echo 'Build complete'"
+  },
+  "engines": {
+    "node": "18.x"
   },
   "keywords": [
     "google-cloud",

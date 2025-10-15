@@ -14,7 +14,7 @@ const profileParser = require('./modules/profileParser');
 const pointsCalculator = require('./modules/pointsCalculator');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -141,11 +141,25 @@ app.use((req, res) => {
     });
 });
 
+// Error handling for unhandled promises
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`🚀 Cloud Skills Boost Calculator running on port ${PORT}`);
     console.log(`📱 Frontend: http://localhost:${PORT}`);
     console.log(`🔧 API: http://localhost:${PORT}/api`);
+});
+
+server.on('error', (error) => {
+    console.error('Server error:', error);
 });
 
 module.exports = app;

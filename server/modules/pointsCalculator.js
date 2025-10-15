@@ -9,7 +9,9 @@ const path = require('path');
 class PointsCalculator {
     constructor() {
         this.scoringConfigPath = path.join(__dirname, '../../config/scoringConfig.json');
+        this.allowedBadgesPath = path.join(__dirname, '../../config/allowedSkillBadges.json');
         this.scoringConfig = this.loadScoringConfig();
+        this.allowedBadges = this.loadAllowedBadges();
     }
 
     /**
@@ -28,6 +30,25 @@ class PointsCalculator {
         } catch (error) {
             console.error('Error loading scoring config:', error);
             return this.getDefaultScoringConfig();
+        }
+    }
+
+    /**
+     * Load allowed skill badges configuration from file
+     * @returns {object} Allowed badges configuration
+     */
+    loadAllowedBadges() {
+        try {
+            if (fs.existsSync(this.allowedBadgesPath)) {
+                const data = fs.readFileSync(this.allowedBadgesPath, 'utf8');
+                return JSON.parse(data);
+            } else {
+                console.log('Allowed badges config not found, allowing all badges');
+                return { allowedSkillBadges: [], metadata: { totalCount: 0 } };
+            }
+        } catch (error) {
+            console.error('Error loading allowed badges config:', error);
+            return { allowedSkillBadges: [], metadata: { totalCount: 0 } };
         }
     }
 
@@ -120,9 +141,15 @@ class PointsCalculator {
                 completedBadges: [],
                 completedGames: [],
                 progress: {},
+                filtering: {
+                    allowedBadgesTotal: this.allowedBadges?.allowedSkillBadges?.length || 0,
+                    filteredBadges: [],
+                    filteredGames: []
+                },
                 metadata: {
                     calculatedAt: new Date().toISOString(),
-                    configVersion: this.scoringConfig.version || '1.0'
+                    configVersion: this.scoringConfig.version || '1.0',
+                    filteringEnabled: this.allowedBadges?.allowedSkillBadges?.length > 0
                 }
             };
 
@@ -153,12 +180,94 @@ class PointsCalculator {
     }
 
     /**
+     * Check if a badge is in the allowed list
+     * @param {object} badge - Badge object to check
+     * @returns {boolean} True if badge is allowed
+     */
+    isBadgeAllowed(badge) {
+        // If no allowed badges configuration, allow all
+        if (!this.allowedBadges || !this.allowedBadges.allowedSkillBadges || this.allowedBadges.allowedSkillBadges.length === 0) {
+            return true;
+        }
+
+        // Check against allowed list by title match or URL/ID match
+        return this.allowedBadges.allowedSkillBadges.some(allowedBadge => {
+            // Match by normalized title (case insensitive)
+            const normalizedAllowedTitle = allowedBadge.name.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+            const badgeTitle = badge.normalizedTitle || badge.originalTitle || badge.title || '';
+            const normalizedBadgeTitle = badgeTitle.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+            
+            // Check primary title match
+            let titleMatch = normalizedAllowedTitle === normalizedBadgeTitle;
+            
+            // Check alternate names if available
+            if (!titleMatch && allowedBadge.alternateNames) {
+                titleMatch = allowedBadge.alternateNames.some(altName => {
+                    const normalizedAltName = altName.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                    return normalizedAltName === normalizedBadgeTitle;
+                });
+            }
+            
+            // Match by template ID if available in badge URL
+            const templateIdMatch = badge.url && allowedBadge.templateId && 
+                badge.url.includes(`course_templates/${allowedBadge.templateId}`);
+            
+            return titleMatch || templateIdMatch;
+        });
+    }
+
+    /**
+     * Check if a game is in the allowed list
+     * @param {object} game - Game object to check
+     * @returns {boolean} True if game is allowed
+     */
+    isGameAllowed(game) {
+        // If no allowed badges configuration, allow all
+        if (!this.allowedBadges || !this.allowedBadges.allowedSkillBadges || this.allowedBadges.allowedSkillBadges.length === 0) {
+            return true;
+        }
+
+        // Check against allowed list (games are also in the skill badges list)
+        return this.allowedBadges.allowedSkillBadges.some(allowedItem => {
+            // Match by normalized title (case insensitive)
+            const normalizedAllowedTitle = allowedItem.name.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+            const gameTitle = game.normalizedTitle || game.originalTitle || game.title || '';
+            const normalizedGameTitle = gameTitle.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+            
+            // Check primary title match
+            let titleMatch = normalizedAllowedTitle === normalizedGameTitle;
+            
+            // Check alternate names if available
+            if (!titleMatch && allowedItem.alternateNames) {
+                titleMatch = allowedItem.alternateNames.some(altName => {
+                    const normalizedAltName = altName.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+                    return normalizedAltName === normalizedGameTitle;
+                });
+            }
+            
+            // Match by game ID if available
+            const gameIdMatch = game.url && allowedItem.gameId && 
+                game.url.includes(`games/${allowedItem.gameId}`);
+            
+            return titleMatch || gameIdMatch;
+        });
+    }
+
+    /**
      * Calculate points from badges
      * @param {Array} badges - Array of badge objects
      * @param {object} result - Result object to populate
      */
     calculateBadgePoints(badges, result) {
-        const completedBadges = badges.filter(badge => badge.isCompleted);
+        const allCompletedBadges = badges.filter(badge => badge.isCompleted);
+        const completedBadges = allCompletedBadges.filter(badge => this.isBadgeAllowed(badge));
+        
+        // Track filtered out badges for debugging
+        const filteredOutBadges = allCompletedBadges.filter(badge => !this.isBadgeAllowed(badge));
+        result.filtering.filteredBadges = filteredOutBadges.map(badge => ({
+            title: badge.originalTitle,
+            reason: 'Not in allowed skill badges list'
+        }));
         
         completedBadges.forEach(badge => {
             const points = this.calculateItemPoints(badge, 'badge');
@@ -186,7 +295,15 @@ class PointsCalculator {
      * @param {object} result - Result object to populate
      */
     calculateGamePoints(games, result) {
-        const completedGames = games.filter(game => game.isCompleted);
+        const allCompletedGames = games.filter(game => game.isCompleted);
+        const completedGames = allCompletedGames.filter(game => this.isGameAllowed(game));
+        
+        // Track filtered out games for debugging
+        const filteredOutGames = allCompletedGames.filter(game => !this.isGameAllowed(game));
+        result.filtering.filteredGames = filteredOutGames.map(game => ({
+            title: game.originalTitle,
+            reason: 'Not in allowed skill badges list'
+        }));
         
         completedGames.forEach(game => {
             const points = this.calculateItemPoints(game, 'game');

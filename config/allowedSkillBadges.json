@@ -1,0 +1,113 @@
+{
+  "allowedSkillBadges": [
+    {
+      "name": "The Basics of Google Cloud Compute",
+      "link": "https://www.cloudskillsboost.google/course_templates/726",
+      "templateId": "726"
+    },
+    {
+      "name": "Get Started with Cloud Storage",
+      "link": "https://www.cloudskillsboost.google/course_templates/976",
+      "templateId": "976"
+    },
+    {
+      "name": "Get Started with Pub/Sub",
+      "link": "https://www.cloudskillsboost.google/course_templates/725",
+      "templateId": "725"
+    },
+    {
+      "name": "Get Started with API Gateway",
+      "link": "https://www.cloudskillsboost.google/course_templates/638",
+      "templateId": "638"
+    },
+    {
+      "name": "Get Started with Looker",
+      "link": "https://www.cloudskillsboost.google/course_templates/662",
+      "templateId": "662"
+    },
+    {
+      "name": "Get Started with Dataplex",
+      "link": "https://www.cloudskillsboost.google/course_templates/700",
+      "templateId": "700"
+    },
+    {
+      "name": "Get Started with Google Workspace Tools",
+      "link": "https://www.cloudskillsboost.google/course_templates/676",
+      "templateId": "676"
+    },
+    {
+      "name": "App Building with Appsheet",
+      "link": "https://www.cloudskillsboost.google/games/6554",
+      "gameId": "6554"
+    },
+    {
+      "name": "Develop with Apps Script and AppSheet",
+      "link": "https://www.cloudskillsboost.google/course_templates/658",
+      "templateId": "658"
+    },
+    {
+      "name": "Build a Website on Google Cloud",
+      "link": "https://www.cloudskillsboost.google/course_templates/728",
+      "templateId": "728"
+    },
+    {
+      "name": "Set Up a Google Cloud Network",
+      "link": "https://www.cloudskillsboost.google/course_templates/635",
+      "templateId": "635"
+    },
+    {
+      "name": "Store, Process, and Manage Data on Google Cloud - Console",
+      "link": "https://www.cloudskillsboost.google/course_templates/647",
+      "templateId": "647"
+    },
+    {
+      "name": "Cloud Functions: 3 Ways",
+      "alternateNames": ["Cloud Run Functions: 3 Ways"],
+      "link": "https://www.cloudskillsboost.google/course_templates/696",
+      "templateId": "696"
+    },
+    {
+      "name": "App Engine: 3 Ways",
+      "link": "https://www.cloudskillsboost.google/course_templates/978",
+      "templateId": "978"
+    },
+    {
+      "name": "Cloud Speech API: 3 Ways",
+      "link": "https://www.cloudskillsboost.google/course_templates/754",
+      "templateId": "754"
+    },
+    {
+      "name": "Monitoring in Google Cloud",
+      "link": "https://www.cloudskillsboost.google/course_templates/641",
+      "templateId": "641"
+    },
+    {
+      "name": "Analyze Speech and Language with Google APIs",
+      "link": "https://www.cloudskillsboost.google/course_templates/671",
+      "templateId": "671"
+    },
+    {
+      "name": "Prompt Design in Vertex AI",
+      "link": "https://www.cloudskillsboost.google/course_templates/747",
+      "templateId": "747"
+    },
+    {
+      "name": "Develop GenAI Apps with Gemini and Streamlit",
+      "link": "https://www.cloudskillsboost.google/course_templates/715",
+      "templateId": "715"
+    },
+    {
+      "name": "Gen AI Arcade Game: Level 3",
+      "alternateNames": ["Level 3: Generative AI"],
+      "link": "https://www.cloudskillsboost.google/games/32800",
+      "gameId": "32800"
+    }
+  ],
+  "metadata": {
+    "totalCount": 20,
+    "badgeCount": 19,
+    "gameCount": 1,
+    "lastUpdated": "2025-10-15T00:00:00.000Z",
+    "program": "Cloud Study Jams 2025"
+  }
+}

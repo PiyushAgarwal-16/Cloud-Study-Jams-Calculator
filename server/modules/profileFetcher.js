@@ -215,32 +215,67 @@ class ProfileFetcher {
      */
     extractBadges($, profileData) {
         try {
-            // Look for badge containers with various possible selectors
-            const badgeSelectors = [
-                '.badge-item',
-                '.skill-badge',
-                '.badge',
-                '[data-testid="badge"]',
-                '.earned-badge'
-            ];
-
             const badges = [];
+            const gameModalIds = new Set(); // Track which modals are for games
             
-            badgeSelectors.forEach(selector => {
-                $(selector).each((index, element) => {
-                    const badge = this.extractBadgeInfo($, $(element));
-                    if (badge && badge.title) {
-                        badges.push(badge);
+            // First pass: identify game modals
+            $('.profile-badge').each((index, element) => {
+                const $badge = $(element);
+                const modalId = $badge.find('ql-button').attr('modal');
+                
+                if (modalId) {
+                    const $dialog = $(`#${modalId}`);
+                    if ($dialog.length > 0) {
+                        const dialogButton = $dialog.find('ql-button[href]');
+                        const href = dialogButton.attr('href') || '';
+                        
+                        if (href.includes('/games/')) {
+                            gameModalIds.add(modalId);
+                        }
                     }
-                });
+                }
+            });
+            
+            // Second pass: extract only non-game badges
+            $('.profile-badge').each((index, element) => {
+                const $badge = $(element);
+                const modalId = $badge.find('ql-button').attr('modal');
+                
+                // Skip if this is a game (will be extracted in extractGames)
+                if (gameModalIds.has(modalId)) {
+                    return; // Skip this badge, it's actually a game
+                }
+                
+                // Extract badge title
+                const title = $badge.find('.ql-title-medium').first().text().trim();
+                
+                // Extract earned date
+                const earnedText = $badge.find('.ql-body-medium').first().text().trim();
+                
+                // Extract badge URL
+                const badgeUrl = $badge.find('.badge-image').attr('href') || '';
+                
+                // Extract image URL
+                const imageUrl = $badge.find('.badge-image img').attr('src') || '';
+                
+                if (title) {
+                    const badge = {
+                        title: title,
+                        originalTitle: title,
+                        description: '',
+                        earnedDate: earnedText,
+                        isCompleted: earnedText.toLowerCase().includes('earned'),
+                        imageUrl: imageUrl,
+                        badgeUrl: badgeUrl ? `https://www.cloudskillsboost.google${badgeUrl}` : '',
+                        url: badgeUrl
+                    };
+                    
+                    badges.push(badge);
+                }
             });
 
-            // Remove duplicates based on title
-            const uniqueBadges = badges.filter((badge, index, self) => 
-                index === self.findIndex(b => b.title === badge.title)
-            );
-
-            profileData.badges = uniqueBadges;
+            profileData.badges = badges;
+            console.log(`✅ Found ${badges.length} badges`);
 
         } catch (error) {
             console.error('Error extracting badges:', error);
@@ -323,33 +358,54 @@ class ProfileFetcher {
      */
     extractGames($, profileData) {
         try {
-            // Look for game/quest containers
-            const gameSelectors = [
-                '.game-item',
-                '.quest-item',
-                '.game',
-                '.quest',
-                '[data-testid="game"]',
-                '.arcade-game'
-            ];
-
             const games = [];
             
-            gameSelectors.forEach(selector => {
-                $(selector).each((index, element) => {
-                    const game = this.extractGameInfo($, $(element));
-                    if (game && game.title) {
-                        games.push(game);
+            // Games are identified by checking the modal dialogs
+            // Each profile-badge has a modal attribute pointing to a dialog
+            // The dialog contains the actual "Learn more" link which tells us if it's a game
+            $('.profile-badge').each((index, element) => {
+                const $badge = $(element);
+                
+                // Get the modal ID from the ql-button
+                const modalId = $badge.find('ql-button').attr('modal');
+                
+                if (modalId) {
+                    // Find the corresponding dialog
+                    const $dialog = $(`#${modalId}`);
+                    
+                    if ($dialog.length > 0) {
+                        // Check if the dialog's "Learn more" link contains /games/
+                        const dialogButton = $dialog.find('ql-button[href]');
+                        const href = dialogButton.attr('href') || '';
+                        
+                        if (href.includes('/games/')) {
+                            // This is a game!
+                            const title = $badge.find('.ql-title-medium').first().text().trim();
+                            const earnedText = $badge.find('.ql-body-medium').first().text().trim();
+                            const imageUrl = $badge.find('.badge-image img').attr('src') || '';
+                            const badgeUrl = $badge.find('.badge-image').attr('href') || '';
+                            
+                            if (title) {
+                                const game = {
+                                    title: title,
+                                    originalTitle: title,
+                                    description: $dialog.find('p').first().text().trim(),
+                                    completedDate: earnedText,
+                                    isCompleted: earnedText.toLowerCase().includes('earned'),
+                                    imageUrl: imageUrl,
+                                    gameUrl: href ? `https://www.cloudskillsboost.google${href}` : '',
+                                    url: href
+                                };
+                                
+                                games.push(game);
+                            }
+                        }
                     }
-                });
+                }
             });
 
-            // Remove duplicates based on title
-            const uniqueGames = games.filter((game, index, self) => 
-                index === self.findIndex(g => g.title === game.title)
-            );
-
-            profileData.games = uniqueGames;
+            profileData.games = games;
+            console.log(`✅ Found ${games.length} games`);
 
         } catch (error) {
             console.error('Error extracting games:', error);

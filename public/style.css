@@ -407,8 +407,7 @@ body {
     gap: var(--spacing-md);
 }
 
-.item-card,
-.bonus-card {
+.item-card {
     border: var(--border-width) solid var(--gray-200);
     border-radius: var(--border-radius);
     padding: var(--spacing-md);
@@ -416,35 +415,30 @@ body {
     transition: all var(--transition-fast);
 }
 
-.item-card:hover,
-.bonus-card:hover {
+.item-card:hover {
     border-color: var(--gray-300);
     box-shadow: var(--shadow-sm);
 }
 
-.item-header,
-.bonus-header {
+.item-header {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
 }
 
-.item-icon,
-.bonus-icon {
+.item-icon {
     font-size: var(--font-size-lg);
 }
 
-.item-title,
-.bonus-title {
+.item-title {
     flex: 1;
     font-size: var(--font-size-base);
     font-weight: 500;
     color: var(--gray-800);
 }
 
-.item-points,
-.bonus-points {
+.item-points {
     font-weight: 600;
     color: var(--secondary-color);
     font-size: var(--font-size-base);
@@ -494,53 +488,7 @@ body {
     font-style: italic;
 }
 
-/* Participant Information */
-.participant-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: var(--white);
-    border: none;
-    margin-bottom: var(--spacing-lg);
-}
 
-.participant-card h3 {
-    color: var(--white);
-    margin-bottom: var(--spacing-lg);
-}
-
-.participant-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-md);
-}
-
-.participant-item {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.participant-label {
-    font-size: var(--font-size-sm);
-    opacity: 0.8;
-    font-weight: 500;
-}
-
-.participant-value {
-    font-weight: 600;
-    font-size: var(--font-size-base);
-}
-
-.participant-value.status-enrolled {
-    color: #4ade80;
-}
-
-.participant-value.status-pending {
-    color: #fbbf24;
-}
-
-.participant-value.status-inactive {
-    color: #f87171;
-}
 
 /* Actions */
 .actions {
@@ -613,8 +561,7 @@ body {
 }
 
 @media (max-width: 480px) {
-    .item-header,
-    .bonus-header {
+    .item-header {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--spacing-xs);

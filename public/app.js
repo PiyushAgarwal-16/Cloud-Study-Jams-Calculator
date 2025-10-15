@@ -154,11 +154,6 @@ class SkillsBoostCalculator {
         this.hideLoading();
         this.hideError();
 
-        // Display participant information if available
-        if (results.participant) {
-            this.displayParticipantInfo(results.participant);
-        }
-
         // Update summary
         document.getElementById('totalPoints').textContent = results.totalPoints.toLocaleString();
         document.getElementById('completedBadgesCount').textContent = results.completedBadges.length;
@@ -171,17 +166,14 @@ class SkillsBoostCalculator {
         // Update points breakdown
         document.getElementById('badgePoints').textContent = results.breakdown.badges.points.toLocaleString();
         document.getElementById('gamePoints').textContent = results.breakdown.games.points.toLocaleString();
-        document.getElementById('bonusPoints').textContent = results.breakdown.bonuses.points.toLocaleString();
 
         // Update tab counts
         document.getElementById('badgeTabCount').textContent = results.breakdown.badges.count;
         document.getElementById('gameTabCount').textContent = results.breakdown.games.count;
-        document.getElementById('bonusTabCount').textContent = results.breakdown.bonuses.items.length;
 
         // Populate item lists
         this.populateBadgesList(results.breakdown.badges.items);
         this.populateGamesList(results.breakdown.games.items);
-        this.populateBonusesList(results.breakdown.bonuses.items);
 
         this.showResults();
     }
@@ -237,23 +229,7 @@ class SkillsBoostCalculator {
         });
     }
 
-    /**
-     * Populate bonuses list
-     */
-    populateBonusesList(bonuses) {
-        const container = document.getElementById('bonusesList');
-        container.innerHTML = '';
 
-        if (bonuses.length === 0) {
-            container.innerHTML = '<p class="empty-state">No bonus points earned</p>';
-            return;
-        }
-
-        bonuses.forEach(bonus => {
-            const item = this.createBonusElement(bonus);
-            container.appendChild(item);
-        });
-    }
 
     /**
      * Create item element for badges and games
@@ -284,26 +260,7 @@ class SkillsBoostCalculator {
         return element;
     }
 
-    /**
-     * Create bonus element
-     */
-    createBonusElement(bonus) {
-        const element = document.createElement('div');
-        element.className = 'bonus-card';
 
-        element.innerHTML = `
-            <div class="bonus-header">
-                <span class="bonus-icon">🎁</span>
-                <h4 class="bonus-title">${this.escapeHtml(bonus.description || bonus.type)}</h4>
-                <span class="bonus-points">+${bonus.points}</span>
-            </div>
-            <div class="bonus-type">
-                <span class="type-badge">${this.formatBonusType(bonus.type)}</span>
-            </div>
-        `;
-
-        return element;
-    }
 
     /**
      * Format category name for display
@@ -319,12 +276,7 @@ class SkillsBoostCalculator {
         return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
     }
 
-    /**
-     * Format bonus type for display
-     */
-    formatBonusType(type) {
-        return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
+
 
     /**
      * Escape HTML to prevent XSS
@@ -410,50 +362,7 @@ class SkillsBoostCalculator {
         });
     }
 
-    /**
-     * Display participant information
-     */
-    displayParticipantInfo(participant) {
-        // Find or create participant info section
-        let participantSection = document.getElementById('participantInfo');
-        
-        if (!participantSection) {
-            // Create participant info section
-            participantSection = document.createElement('div');
-            participantSection.id = 'participantInfo';
-            participantSection.className = 'card participant-card';
-            
-            // Insert before results section
-            const resultsSection = document.getElementById('resultsSection');
-            resultsSection.insertBefore(participantSection, resultsSection.firstChild);
-        }
 
-        participantSection.innerHTML = `
-            <h3>👤 Participant Information</h3>
-            <div class="participant-details">
-                <div class="participant-item">
-                    <span class="participant-label">ID:</span>
-                    <span class="participant-value">${this.escapeHtml(participant.id || 'N/A')}</span>
-                </div>
-                <div class="participant-item">
-                    <span class="participant-label">Name:</span>
-                    <span class="participant-value">${this.escapeHtml(participant.name || 'N/A')}</span>
-                </div>
-                <div class="participant-item">
-                    <span class="participant-label">Batch:</span>
-                    <span class="participant-value">${this.escapeHtml(participant.batch || 'N/A')}</span>
-                </div>
-                <div class="participant-item">
-                    <span class="participant-label">Enrollment Date:</span>
-                    <span class="participant-value">${this.formatDate(participant.enrollmentDate)}</span>
-                </div>
-                <div class="participant-item">
-                    <span class="participant-label">Status:</span>
-                    <span class="participant-value status-${participant.status || 'unknown'}">${this.escapeHtml(participant.status || 'Unknown')}</span>
-                </div>
-            </div>
-        `;
-    }
 
     /**
      * Format date for display
@@ -476,12 +385,6 @@ class SkillsBoostCalculator {
     resetForm() {
         document.getElementById('profileForm').reset();
         this.currentResults = null;
-        
-        // Remove participant info section
-        const participantSection = document.getElementById('participantInfo');
-        if (participantSection) {
-            participantSection.remove();
-        }
         
         this.showInputSection();
     }

@@ -558,23 +558,40 @@ class PointsCalculator {
      * @param {object} result - Result object to populate
      */
     calculateProgress(parsedProfile, result) {
-        const stats = parsedProfile.statistics || {};
+        // Use fixed totals from allowed items list
+        const totalAllowedBadges = 19;
+        const totalAllowedGames = 1;
+        
+        // Get completed counts from filtered results
+        const completedBadges = result.breakdown.badges.count || 0;
+        const completedGames = result.breakdown.games.count || 0;
+        
+        // Calculate percentages
+        const badgePercentage = totalAllowedBadges > 0 
+            ? Math.round((completedBadges / totalAllowedBadges) * 100) 
+            : 0;
+        const gamePercentage = totalAllowedGames > 0 
+            ? Math.round((completedGames / totalAllowedGames) * 100) 
+            : 0;
+        const overallPercentage = (totalAllowedBadges + totalAllowedGames) > 0
+            ? Math.round(((completedBadges + completedGames) / (totalAllowedBadges + totalAllowedGames)) * 100)
+            : 0;
         
         result.progress = {
             badges: {
-                completed: stats.completed?.badges || 0,
-                total: stats.total?.badges || 0,
-                percentage: stats.completion?.badgePercentage || 0
+                completed: completedBadges,
+                total: totalAllowedBadges,
+                percentage: badgePercentage
             },
             games: {
-                completed: stats.completed?.games || 0,
-                total: stats.total?.games || 0,
-                percentage: stats.completion?.gamePercentage || 0
+                completed: completedGames,
+                total: totalAllowedGames,
+                percentage: gamePercentage
             },
             overall: {
-                completed: (stats.completed?.badges || 0) + (stats.completed?.games || 0),
-                total: (stats.total?.badges || 0) + (stats.total?.games || 0),
-                percentage: stats.completion?.overallPercentage || 0
+                completed: completedBadges + completedGames,
+                total: totalAllowedBadges + totalAllowedGames,
+                percentage: overallPercentage
             }
         };
     }

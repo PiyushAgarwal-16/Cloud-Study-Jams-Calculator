@@ -64,6 +64,7 @@ app.post('/api/calculate-points', async (req, res) => {
             success: true,
             participant: participant,
             profileUrl: profileUrl,
+            userName: parsedData.profileInfo?.name || participant?.name || 'Unknown User',
             totalPoints: result.totalPoints,
             completedBadges: result.completedBadges,
             completedGames: result.completedGames,
@@ -80,6 +81,50 @@ app.post('/api/calculate-points', async (req, res) => {
         res.status(500).json({ 
             error: 'Internal server error while processing profile',
             message: error.message 
+        });
+    }
+});
+
+// API endpoint to get participants list (for analytics)
+app.get('/api/participants', async (req, res) => {
+    try {
+        // Check if test mode is requested
+        const isTestMode = req.query.test === 'true';
+        
+        // Determine which file to load
+        const fs = require('fs');
+        const filename = isTestMode ? 'testParticipants.json' : 'enrolledParticipants.json';
+        const filePath = path.join(__dirname, '../config', filename);
+        
+        console.log(isTestMode ? '🧪 TEST MODE: Loading 30 participants' : '📊 Loading all 196 participants');
+        
+        // Read and parse the file directly
+        const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const participants = data.participants || [];
+        
+        // Transform to consistent format
+        const formattedParticipants = participants.map(p => {
+            if (typeof p === 'object' && p.profileId) {
+                return {
+                    name: p.name || 'Unknown',
+                    profileId: p.profileId,
+                    profileUrl: p.profileUrl || `https://www.cloudskillsboost.google/public_profiles/${p.profileId}`
+                };
+            }
+            return null;
+        }).filter(p => p !== null);
+        
+        res.json({
+            success: true,
+            testMode: isTestMode,
+            totalParticipants: formattedParticipants.length,
+            participants: formattedParticipants
+        });
+    } catch (error) {
+        console.error('Error loading participants:', error);
+        res.status(500).json({ 
+            error: 'Failed to load participants',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });

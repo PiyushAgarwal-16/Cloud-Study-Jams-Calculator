@@ -7,9 +7,18 @@ const fs = require('fs');
 const path = require('path');
 
 class EnrollmentChecker {
-    constructor() {
-        this.enrollmentListPath = path.join(__dirname, '../../config/enrolledParticipants.json');
+    constructor(useTestMode = false) {
+        // Check for test mode via parameter or environment variable
+        const isTestMode = useTestMode || process.env.TEST_MODE === 'true';
+        const filename = isTestMode ? 'testParticipants.json' : 'enrolledParticipants.json';
+        
+        this.enrollmentListPath = path.join(__dirname, '../../config', filename);
+        this.isTestMode = isTestMode;
         this.enrollmentList = this.loadEnrollmentList();
+        
+        if (isTestMode) {
+            console.log('🧪 TEST MODE: Using', filename, 'with', this.enrollmentList.length, 'participants');
+        }
     }
 
     /**
@@ -186,6 +195,50 @@ class EnrollmentChecker {
     }
 
     /**
+     * Load enrolled participants with full details for analytics
+     * @returns {Promise<object>} Object with totalParticipants and participants array
+     */
+    async loadEnrolledParticipants() {
+        try {
+            const participants = this.enrollmentList.map(participant => {
+                if (typeof participant === 'object' && participant.profileId) {
+                    return {
+                        name: participant.name || 'Unknown',
+                        profileId: participant.profileId,
+                        profileUrl: `https://www.cloudskillsboost.google/public_profiles/${participant.profileId}`
+                    };
+                } else if (typeof participant === 'object' && participant.profileUrl) {
+                    const profileId = this.extractProfileId(participant.profileUrl);
+                    return {
+                        name: participant.name || 'Unknown',
+                        profileId: profileId,
+                        profileUrl: participant.profileUrl
+                    };
+                } else if (typeof participant === 'string') {
+                    const profileId = this.extractProfileId(participant);
+                    return {
+                        name: 'Unknown',
+                        profileId: profileId,
+                        profileUrl: participant
+                    };
+                }
+                return null;
+            }).filter(p => p !== null);
+
+            return {
+                totalParticipants: participants.length,
+                participants: participants
+            };
+        } catch (error) {
+            console.error('Error loading enrolled participants:', error);
+            return {
+                totalParticipants: 0,
+                participants: []
+            };
+        }
+    }
+
+    /**
      * Get participant details by profile URL
      * @param {string} profileUrl - The profile URL to search for
      * @returns {object|null} Participant object or null if not found
@@ -237,6 +290,7 @@ module.exports = {
     checkEnrollment: (profileUrl) => enrollmentChecker.checkEnrollment(profileUrl),
     addParticipant: (participant) => enrollmentChecker.addParticipant(participant),
     getEnrollmentList: () => enrollmentChecker.getEnrollmentList(),
+    loadEnrolledParticipants: () => enrollmentChecker.loadEnrolledParticipants(),
     getParticipantByUrl: (profileUrl) => enrollmentChecker.getParticipantByUrl(profileUrl),
     getStats: () => enrollmentChecker.getStats(),
     normalizeProfileUrl: (url) => enrollmentChecker.normalizeProfileUrl(url),

@@ -44,6 +44,20 @@ class SkillsBoostCalculator {
         document.getElementById('profileUrl').addEventListener('input', (e) => {
             this.validateProfileUrl(e.target);
         });
+
+        // Analytics button
+        document.getElementById('fetchAnalyticsBtn').addEventListener('click', () => {
+            this.fetchAnalytics();
+        });
+
+        // Export analytics buttons
+        document.getElementById('exportAnalyticsBtn').addEventListener('click', () => {
+            this.exportAnalytics('json');
+        });
+
+        document.getElementById('exportAnalyticsCSVBtn').addEventListener('click', () => {
+            this.exportAnalytics('csv');
+        });
     }
 
     /**

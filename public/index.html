@@ -45,6 +45,159 @@
                 </div>
             </section>
 
+            <!-- Analytics Tool Section -->
+            <section class="analytics-section">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <div>
+                            <h2 style="margin: 0;">📈 Program Analytics</h2>
+                            <p class="analytics-description" style="margin: 0.5rem 0 0 0;">
+                                <span id="analyticsParticipantCount">Fetch and analyze completion data for all 196 enrolled participants</span>
+                            </p>
+                        </div>
+                        <div class="test-mode-toggle">
+                            <label class="toggle-label">
+                                <input type="checkbox" id="testModeToggle">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">🧪 Test Mode (30)</span>
+                            </label>
+                        </div>
+                    </div>
+                    <button id="fetchAnalyticsBtn" class="btn btn-primary">
+                        <span class="btn-text">🔄 Fetch Latest Data</span>
+                        <div class="spinner" style="display: none;"></div>
+                    </button>
+                    
+                    <!-- Analytics Loading -->
+                    <div id="analyticsLoading" class="analytics-loading" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p id="analyticsProgress">Fetching participant data... (0/196)</p>
+                    </div>
+
+                    <!-- Analytics Results -->
+                    <div id="analyticsResults" class="analytics-results" style="display: none;">
+                        <!-- Summary Stats -->
+                        <div class="analytics-summary">
+                            <h3>📊 Overall Statistics</h3>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <span class="stat-icon">👥</span>
+                                    <div class="stat-info">
+                                        <span class="stat-label">Total Participants</span>
+                                        <span class="stat-value" id="totalParticipants">0</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-icon">✅</span>
+                                    <div class="stat-info">
+                                        <span class="stat-label">Fully Completed</span>
+                                        <span class="stat-value" id="fullyCompleted">0</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-icon">🏆</span>
+                                    <div class="stat-info">
+                                        <span class="stat-label">Avg Badges Completed</span>
+                                        <span class="stat-value" id="avgBadges">0</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-icon">🎮</span>
+                                    <div class="stat-info">
+                                        <span class="stat-label">Avg Games Completed</span>
+                                        <span class="stat-value" id="avgGames">0</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-icon">📈</span>
+                                    <div class="stat-info">
+                                        <span class="stat-label">Overall Progress</span>
+                                        <span class="stat-value" id="overallProgress">0%</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <span class="stat-icon">⭐</span>
+                                    <div class="stat-info">
+                                        <span class="stat-label">Total Points</span>
+                                        <span class="stat-value" id="totalPoints">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Distribution -->
+                        <div class="analytics-distribution">
+                            <h3>📊 Completion Distribution</h3>
+                            <div class="distribution-bars">
+                                <div class="distribution-item">
+                                    <div class="distribution-header">
+                                        <span>100% Complete (20/20)</span>
+                                        <span id="complete100Count">0 participants</span>
+                                    </div>
+                                    <div class="distribution-bar">
+                                        <div class="distribution-fill" id="complete100Fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="distribution-item">
+                                    <div class="distribution-header">
+                                        <span>75-99% Complete (15-19/20)</span>
+                                        <span id="complete75Count">0 participants</span>
+                                    </div>
+                                    <div class="distribution-bar">
+                                        <div class="distribution-fill" id="complete75Fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="distribution-item">
+                                    <div class="distribution-header">
+                                        <span>50-74% Complete (10-14/20)</span>
+                                        <span id="complete50Count">0 participants</span>
+                                    </div>
+                                    <div class="distribution-bar">
+                                        <div class="distribution-fill" id="complete50Fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="distribution-item">
+                                    <div class="distribution-header">
+                                        <span>25-49% Complete (5-9/20)</span>
+                                        <span id="complete25Count">0 participants</span>
+                                    </div>
+                                    <div class="distribution-bar">
+                                        <div class="distribution-fill" id="complete25Fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="distribution-item">
+                                    <div class="distribution-header">
+                                        <span>0-24% Complete (0-4/20)</span>
+                                        <span id="complete0Count">0 participants</span>
+                                    </div>
+                                    <div class="distribution-bar">
+                                        <div class="distribution-fill" id="complete0Fill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Performers -->
+                        <div class="analytics-leaderboard">
+                            <h3>🏆 Top 10 Performers</h3>
+                            <div id="leaderboardList" class="leaderboard-list">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Export Analytics -->
+                        <div class="analytics-actions">
+                            <button id="exportAnalyticsBtn" class="btn btn-secondary">
+                                📥 Export Analytics Data (JSON)
+                            </button>
+                            <button id="exportAnalyticsCSVBtn" class="btn btn-secondary">
+                                📊 Export Analytics Data (CSV)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Loading Section -->
             <section id="loadingSection" class="loading-section" style="display: none;">
                 <div class="card">
@@ -152,5 +305,6 @@
     </div>
 
     <script src="app.js"></script>
+    <script src="analytics.js"></script>
 </body>
 </html>

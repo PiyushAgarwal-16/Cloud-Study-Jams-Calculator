@@ -1254,6 +1254,206 @@ body {
     margin-top: var(--spacing-xl);
 }
 
+/* Date Filter Styles */
+.date-filter-section {
+    margin-top: var(--spacing-lg);
+}
+
+.date-filter-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+.date-filter-card h3 {
+    color: var(--primary-color);
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: var(--font-size-lg);
+}
+
+.date-filter-description {
+    color: var(--gray-600);
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: var(--font-size-sm);
+}
+
+.date-filter-controls {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.date-input-group label {
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+}
+
+.date-input {
+    padding: 0.625rem;
+    border: var(--border-width) solid var(--gray-400);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+    min-width: 200px;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 168, 83, 0.1);
+}
+
+.filter-type-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.filter-type-group label {
+    font-weight: 600;
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+}
+
+.filter-type-select {
+    padding: 0.625rem;
+    border: var(--border-width) solid var(--gray-400);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    min-width: 250px;
+}
+
+.filter-type-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 168, 83, 0.1);
+}
+
+.filter-type-select:hover {
+    border-color: var(--primary-color);
+}
+
+.date-filter-results {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 2px solid var(--gray-300);
+}
+
+.date-filter-results h4 {
+    color: var(--gray-800);
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: var(--font-size-md);
+}
+
+.date-filter-summary {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-left: 4px solid var(--primary-color);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius);
+}
+
+.date-filter-summary p {
+    margin: 0.25rem 0;
+    color: var(--gray-700);
+    font-size: var(--font-size-sm);
+}
+
+.date-filter-summary strong {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.date-filter-list {
+    display: grid;
+    gap: var(--spacing-sm);
+    max-height: 400px;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+    background: white;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-300);
+}
+
+.date-filter-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: white;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+}
+
+.date-filter-item:hover {
+    background: var(--gray-100);
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+}
+
+.date-filter-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.date-filter-item-name {
+    font-weight: 600;
+    color: var(--gray-800);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-link {
+    font-size: 0.85em;
+    text-decoration: none;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.profile-link:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+.date-filter-item-details {
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+}
+
+.date-filter-item-badge {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.date-filter-empty {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--gray-600);
+    font-style: italic;
+}
+
 /* Accessibility */
 @media (prefers-reduced-motion: reduce) {
     * {

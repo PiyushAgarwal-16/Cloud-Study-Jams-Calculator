@@ -70,6 +70,8 @@ app.post('/api/calculate-points', async (req, res) => {
             completedGames: result.completedGames,
             progress: result.progress,
             breakdown: result.breakdown,
+            detailedBadges: parsedData.badges || [],
+            detailedGames: parsedData.games || [],
             metadata: {
                 calculatedAt: new Date().toISOString(),
                 batch: participant?.batch || 'Unknown'

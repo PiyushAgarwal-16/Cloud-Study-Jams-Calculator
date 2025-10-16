@@ -68,6 +68,45 @@
                         <div class="spinner" style="display: none;"></div>
                     </button>
                     
+                    <!-- Date Filter Section -->
+                    <div id="dateFilterSection" class="date-filter-section" style="display: none; margin-top: 1rem;">
+                        <div class="date-filter-card">
+                            <h3>📅 Advanced Completion Date Filters</h3>
+                            <p class="date-filter-description">Find participants based on specific completion criteria after a date</p>
+                            
+                            <div class="date-filter-controls">
+                                <div class="date-input-group">
+                                    <label for="completionDateFilter">Select Date:</label>
+                                    <input type="date" id="completionDateFilter" class="date-input">
+                                </div>
+                                
+                                <div class="filter-type-group">
+                                    <label for="filterTypeSelect">Filter Type:</label>
+                                    <select id="filterTypeSelect" class="filter-type-select">
+                                        <option value="all">All Items (Badges + Game)</option>
+                                        <option value="badges">Skill Badges Only</option>
+                                        <option value="games">Game Only</option>
+                                        <option value="allBadges">All 19 Skill Badges Completed</option>
+                                        <option value="allGames">Game Completed</option>
+                                    </select>
+                                </div>
+                                
+                                <button id="applyDateFilterBtn" class="btn btn-secondary">
+                                    🔍 Find Participants
+                                </button>
+                                <button id="clearDateFilterBtn" class="btn btn-outline" style="display: none;">
+                                    ✖️ Clear Filter
+                                </button>
+                            </div>
+                            
+                            <div id="dateFilterResults" class="date-filter-results" style="display: none;">
+                                <h4 id="dateFilterTitle">Results</h4>
+                                <div id="dateFilterSummary" class="date-filter-summary"></div>
+                                <div id="dateFilterList" class="date-filter-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Analytics Loading -->
                     <div id="analyticsLoading" class="analytics-loading" style="display: none;">
                         <div class="loading-spinner"></div>

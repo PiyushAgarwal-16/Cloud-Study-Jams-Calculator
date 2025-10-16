@@ -48,6 +48,21 @@
                 this.exportAnalytics('csv');
             });
         }
+
+        // Date filter buttons
+        const applyDateFilterBtn = document.getElementById('applyDateFilterBtn');
+        if (applyDateFilterBtn) {
+            applyDateFilterBtn.addEventListener('click', () => {
+                this.applyDateFilter();
+            });
+        }
+
+        const clearDateFilterBtn = document.getElementById('clearDateFilterBtn');
+        if (clearDateFilterBtn) {
+            clearDateFilterBtn.addEventListener('click', () => {
+                this.clearDateFilter();
+            });
+        }
     };
 
     /**
@@ -109,11 +124,14 @@
                         analyticsData.push({
                             name: result.userName || participant.name || 'Unknown',
                             profileId: participant.profileId,
+                            profileUrl: participant.profileUrl,
                             badges: result.breakdown.badges.count || 0,
                             games: result.breakdown.games.count || 0,
                             totalItems: itemCount,
                             points: result.totalPoints || 0,
                             progress: result.progress.overall.percentage || 0,
+                            detailedBadges: result.detailedBadges || [],
+                            detailedGames: result.detailedGames || [],
                             status: 'success'
                         });
                     } else {
@@ -168,6 +186,12 @@
             // Hide loading, show results
             loadingSection.style.display = 'none';
             resultsSection.style.display = 'block';
+
+            // Show date filter section
+            const dateFilterSection = document.getElementById('dateFilterSection');
+            if (dateFilterSection) {
+                dateFilterSection.style.display = 'block';
+            }
 
             // Show warning if some profiles failed
             if (failedProfiles.length > 0) {
@@ -400,5 +424,532 @@
         link.click();
 
         URL.revokeObjectURL(link.href);
+    };
+
+    /**
+     * Apply date filter to find participants with completions after selected date
+     */
+    SkillsBoostCalculator.prototype.applyDateFilter = function() {
+        const dateInput = document.getElementById('completionDateFilter');
+        const filterTypeSelect = document.getElementById('filterTypeSelect');
+        const selectedDate = dateInput.value;
+        const filterType = filterTypeSelect.value;
+
+        if (!selectedDate) {
+            alert('Please select a date to filter by');
+            return;
+        }
+
+        if (!this.analyticsData || this.analyticsData.length === 0) {
+            alert('Please fetch analytics data first');
+            return;
+        }
+
+        const filterDate = new Date(selectedDate);
+        filterDate.setHours(0, 0, 0, 0);
+
+        console.log(`🔍 Filtering participants: ${filterType} after ${selectedDate}`);
+
+        let filteredParticipants = [];
+
+        switch (filterType) {
+            case 'all':
+                filteredParticipants = this.filterAllItems(filterDate);
+                break;
+            case 'badges':
+                filteredParticipants = this.filterBadgesOnly(filterDate);
+                break;
+            case 'games':
+                filteredParticipants = this.filterGamesOnly(filterDate);
+                break;
+            case 'allBadges':
+                filteredParticipants = this.filterAllBadgesCompleted(filterDate);
+                break;
+            case 'allGames':
+                filteredParticipants = this.filterAllGamesCompleted(filterDate);
+                break;
+        }
+
+        console.log(`Found ${filteredParticipants.length} participants matching criteria`);
+
+        // Display filtered results
+        this.displayDateFilterResults(filteredParticipants, selectedDate, filterType);
+    };
+
+    /**
+     * Filter participants with any completions (badges or games) after date
+     */
+    SkillsBoostCalculator.prototype.filterAllItems = function(filterDate) {
+        const filtered = [];
+
+        this.analyticsData.forEach(participant => {
+            if (participant.status !== 'success') return;
+
+            const completionsAfterDate = [];
+            const detailedBadges = participant.detailedBadges || [];
+            const detailedGames = participant.detailedGames || [];
+
+            // Check badges
+            detailedBadges.forEach(badge => {
+                if (badge.isCompleted && badge.earnedDate) {
+                    const earnedDate = new Date(badge.earnedDate);
+                    if (earnedDate > filterDate) {
+                        completionsAfterDate.push({
+                            type: 'badge',
+                            title: badge.normalizedTitle || badge.originalTitle,
+                            date: badge.earnedDate
+                        });
+                    }
+                }
+            });
+
+            // Check games
+            detailedGames.forEach(game => {
+                if (game.isCompleted && game.completedDate) {
+                    const completedDate = new Date(game.completedDate);
+                    if (completedDate > filterDate) {
+                        completionsAfterDate.push({
+                            type: 'game',
+                            title: game.normalizedTitle || game.originalTitle,
+                            date: game.completedDate
+                        });
+                    }
+                }
+            });
+
+            if (completionsAfterDate.length > 0) {
+                filtered.push({
+                    name: participant.name,
+                    profileId: participant.profileId,
+                    profileUrl: participant.profileUrl,
+                    completions: completionsAfterDate,
+                    totalCompletionsAfterDate: completionsAfterDate.length,
+                    badgeCount: completionsAfterDate.filter(c => c.type === 'badge').length,
+                    gameCount: completionsAfterDate.filter(c => c.type === 'game').length
+                });
+            }
+        });
+
+        return filtered;
+    };
+
+    /**
+     * Filter participants with badge completions after date
+     */
+    SkillsBoostCalculator.prototype.filterBadgesOnly = function(filterDate) {
+        const filtered = [];
+
+        this.analyticsData.forEach(participant => {
+            if (participant.status !== 'success') return;
+
+            const badgesAfterDate = [];
+            const detailedBadges = participant.detailedBadges || [];
+
+            detailedBadges.forEach(badge => {
+                if (badge.isCompleted && badge.earnedDate) {
+                    const earnedDate = new Date(badge.earnedDate);
+                    if (earnedDate > filterDate) {
+                        badgesAfterDate.push({
+                            type: 'badge',
+                            title: badge.normalizedTitle || badge.originalTitle,
+                            date: badge.earnedDate
+                        });
+                    }
+                }
+            });
+
+            if (badgesAfterDate.length > 0) {
+                filtered.push({
+                    name: participant.name,
+                    profileId: participant.profileId,
+                    profileUrl: participant.profileUrl,
+                    completions: badgesAfterDate,
+                    totalCompletionsAfterDate: badgesAfterDate.length,
+                    badgeCount: badgesAfterDate.length,
+                    gameCount: 0
+                });
+            }
+        });
+
+        return filtered;
+    };
+
+    /**
+     * Filter participants with game completions after date
+     */
+    SkillsBoostCalculator.prototype.filterGamesOnly = function(filterDate) {
+        const filtered = [];
+
+        this.analyticsData.forEach(participant => {
+            if (participant.status !== 'success') return;
+
+            const gamesAfterDate = [];
+            const detailedGames = participant.detailedGames || [];
+
+            detailedGames.forEach(game => {
+                if (game.isCompleted && game.completedDate) {
+                    const completedDate = new Date(game.completedDate);
+                    if (completedDate > filterDate) {
+                        gamesAfterDate.push({
+                            type: 'game',
+                            title: game.normalizedTitle || game.originalTitle,
+                            date: game.completedDate
+                        });
+                    }
+                }
+            });
+
+            if (gamesAfterDate.length > 0) {
+                filtered.push({
+                    name: participant.name,
+                    profileId: participant.profileId,
+                    profileUrl: participant.profileUrl,
+                    completions: gamesAfterDate,
+                    totalCompletionsAfterDate: gamesAfterDate.length,
+                    badgeCount: 0,
+                    gameCount: gamesAfterDate.length
+                });
+            }
+        });
+
+        return filtered;
+    };
+
+    /**
+     * Filter participants who completed all 19 skill badges after date
+     */
+    SkillsBoostCalculator.prototype.filterAllBadgesCompleted = function(filterDate) {
+        const filtered = [];
+
+        this.analyticsData.forEach(participant => {
+            if (participant.status !== 'success') return;
+
+            const detailedBadges = participant.detailedBadges || [];
+            const completedBadges = detailedBadges.filter(b => b.isCompleted);
+
+            // Check if all 19 badges are completed
+            if (completedBadges.length >= 19) {
+                // Find the latest badge completion date
+                const badgeDates = completedBadges
+                    .filter(b => b.earnedDate)
+                    .map(b => new Date(b.earnedDate))
+                    .sort((a, b) => b - a);
+
+                if (badgeDates.length > 0) {
+                    const latestBadgeDate = badgeDates[0];
+                    
+                    // Check if the latest (19th) badge was completed after the filter date
+                    if (latestBadgeDate > filterDate) {
+                        // Find which badges were completed after the date
+                        const badgesAfterDate = completedBadges.filter(badge => {
+                            if (badge.earnedDate) {
+                                const earnedDate = new Date(badge.earnedDate);
+                                return earnedDate > filterDate;
+                            }
+                            return false;
+                        }).map(badge => ({
+                            type: 'badge',
+                            title: badge.normalizedTitle || badge.originalTitle,
+                            date: badge.earnedDate
+                        }));
+
+                        filtered.push({
+                            name: participant.name,
+                            profileId: participant.profileId,
+                            profileUrl: participant.profileUrl,
+                            completions: badgesAfterDate,
+                            totalCompletionsAfterDate: badgesAfterDate.length,
+                            badgeCount: badgesAfterDate.length,
+                            gameCount: 0,
+                            completedAllBadges: true,
+                            latestCompletionDate: latestBadgeDate
+                        });
+                    }
+                }
+            }
+        });
+
+        return filtered;
+    };
+
+    /**
+     * Filter participants who completed the game after date
+     */
+    SkillsBoostCalculator.prototype.filterAllGamesCompleted = function(filterDate) {
+        const filtered = [];
+
+        this.analyticsData.forEach(participant => {
+            if (participant.status !== 'success') return;
+
+            const detailedGames = participant.detailedGames || [];
+            const completedGames = detailedGames.filter(g => g.isCompleted);
+
+            // Check if the game is completed
+            if (completedGames.length >= 1) {
+                // Find the latest game completion date
+                const gameDates = completedGames
+                    .filter(g => g.completedDate)
+                    .map(g => new Date(g.completedDate))
+                    .sort((a, b) => b - a);
+
+                if (gameDates.length > 0) {
+                    const latestGameDate = gameDates[0];
+                    
+                    // Check if the game was completed after the filter date
+                    if (latestGameDate > filterDate) {
+                        // Find which games were completed after the date
+                        const gamesAfterDate = completedGames.filter(game => {
+                            if (game.completedDate) {
+                                const completedDate = new Date(game.completedDate);
+                                return completedDate > filterDate;
+                            }
+                            return false;
+                        }).map(game => ({
+                            type: 'game',
+                            title: game.normalizedTitle || game.originalTitle,
+                            date: game.completedDate
+                        }));
+
+                        filtered.push({
+                            name: participant.name,
+                            profileId: participant.profileId,
+                            profileUrl: participant.profileUrl,
+                            completions: gamesAfterDate,
+                            totalCompletionsAfterDate: gamesAfterDate.length,
+                            badgeCount: 0,
+                            gameCount: gamesAfterDate.length,
+                            completedAllGames: true,
+                            latestCompletionDate: latestGameDate
+                        });
+                    }
+                }
+            }
+        });
+
+        return filtered;
+    };
+
+    /**
+     * Display date filter results
+     */
+    SkillsBoostCalculator.prototype.displayDateFilterResults = function(participants, filterDate, filterType) {
+        const resultsContainer = document.getElementById('dateFilterResults');
+        const titleElement = document.getElementById('dateFilterTitle');
+        const summaryElement = document.getElementById('dateFilterSummary');
+        const listElement = document.getElementById('dateFilterList');
+        const clearBtn = document.getElementById('clearDateFilterBtn');
+
+        if (!resultsContainer || !titleElement || !listElement) return;
+
+        // Format date
+        const formattedDate = new Date(filterDate).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+
+        // Get filter type description
+        const filterDescriptions = {
+            'all': 'with any completions (badges or game)',
+            'badges': 'who completed skill badges',
+            'games': 'who completed the game',
+            'allBadges': 'who completed ALL 19 skill badges',
+            'allGames': 'who completed the game'
+        };
+
+        // Update title
+        titleElement.textContent = `${participants.length} participant(s) ${filterDescriptions[filterType]} after ${formattedDate}`;
+
+        // Calculate summary statistics
+        const totalBadges = participants.reduce((sum, p) => sum + (p.badgeCount || 0), 0);
+        const totalGames = participants.reduce((sum, p) => sum + (p.gameCount || 0), 0);
+        const totalCompletions = participants.reduce((sum, p) => sum + p.totalCompletionsAfterDate, 0);
+
+        // Display summary
+        if (summaryElement) {
+            let summaryHTML = `<p><strong>Summary:</strong></p>`;
+            summaryHTML += `<p>📊 Total Participants: <strong>${participants.length}</strong></p>`;
+            summaryHTML += `<p>✅ Total Completions: <strong>${totalCompletions}</strong></p>`;
+            
+            if (filterType === 'all' || filterType === 'badges' || filterType === 'allBadges') {
+                summaryHTML += `<p>🏆 Skill Badges: <strong>${totalBadges}</strong></p>`;
+            }
+            if (filterType === 'all' || filterType === 'games' || filterType === 'allGames') {
+                summaryHTML += `<p>🎮 Games: <strong>${totalGames}</strong></p>`;
+            }
+
+            summaryElement.innerHTML = summaryHTML;
+        }
+
+        // Clear previous results
+        listElement.innerHTML = '';
+
+        if (participants.length === 0) {
+            listElement.innerHTML = '<div class="date-filter-empty">No participants found matching the selected criteria.</div>';
+        } else {
+            // Sort by latest completion date (most recent first)
+            participants.sort((a, b) => {
+                const aDate = a.latestCompletionDate || new Date(Math.max(...a.completions.map(c => new Date(c.date))));
+                const bDate = b.latestCompletionDate || new Date(Math.max(...b.completions.map(c => new Date(c.date))));
+                return bDate - aDate;
+            });
+
+            participants.forEach(participant => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'date-filter-item';
+
+                const badgeCount = participant.badgeCount || 0;
+                const gameCount = participant.gameCount || 0;
+
+                // Get the most recent completion date
+                const dates = participant.completions.map(c => new Date(c.date));
+                const latestDate = new Date(Math.max(...dates));
+                const formattedLatestDate = latestDate.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+
+                // Build details text based on filter type
+                let detailsText = '';
+                if (filterType === 'allBadges' && participant.completedAllBadges) {
+                    detailsText = `✅ Completed all 19 badges • ${badgeCount} after selected date • Latest: ${formattedLatestDate}`;
+                } else if (filterType === 'allGames' && participant.completedAllGames) {
+                    detailsText = `✅ Completed the game • Latest: ${formattedLatestDate}`;
+                } else if (filterType === 'badges') {
+                    detailsText = `${badgeCount} badge${badgeCount !== 1 ? 's' : ''} • Latest: ${formattedLatestDate}`;
+                } else if (filterType === 'games') {
+                    detailsText = `${gameCount} game${gameCount !== 1 ? 's' : ''} • Latest: ${formattedLatestDate}`;
+                } else {
+                    detailsText = `${badgeCount} badge${badgeCount !== 1 ? 's' : ''}, ${gameCount} game${gameCount !== 1 ? 's' : ''} • Latest: ${formattedLatestDate}`;
+                }
+
+                itemDiv.innerHTML = `
+                    <div class="date-filter-item-info">
+                        <div class="date-filter-item-name">
+                            ${participant.name}
+                            <a href="${participant.profileUrl}" target="_blank" class="profile-link" title="View profile">🔗</a>
+                        </div>
+                        <div class="date-filter-item-details">${detailsText}</div>
+                    </div>
+                    <div class="date-filter-item-badge">
+                        ${participant.totalCompletionsAfterDate} new
+                    </div>
+                `;
+
+                // Prevent profile link click from triggering modal
+                const profileLink = itemDiv.querySelector('.profile-link');
+                if (profileLink) {
+                    profileLink.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                }
+
+                // Add click event to show details
+                itemDiv.style.cursor = 'pointer';
+                itemDiv.addEventListener('click', () => {
+                    this.showParticipantCompletionDetails(participant, filterType);
+                });
+
+                listElement.appendChild(itemDiv);
+            });
+        }
+
+        // Show results and clear button
+        resultsContainer.style.display = 'block';
+        if (clearBtn) {
+            clearBtn.style.display = 'inline-block';
+        }
+
+        // Scroll to results
+        resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    /**
+     * Show detailed completion information for a participant
+     */
+    SkillsBoostCalculator.prototype.showParticipantCompletionDetails = function(participant, filterType) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+
+        // Sort completions by date (most recent first)
+        const sortedCompletions = participant.completions.sort((a, b) => 
+            new Date(b.date) - new Date(a.date)
+        );
+
+        const completionsList = sortedCompletions.map(completion => {
+            const date = new Date(completion.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            const icon = completion.type === 'badge' ? '🏆' : '🎮';
+            return `<li><strong>${icon} ${completion.title}</strong><br><small>Completed: ${date}</small></li>`;
+        }).join('');
+
+        // Build modal title based on filter type
+        let modalTitle = `📅 ${participant.name}`;
+        let subtitle = `Recent completions (${participant.totalCompletionsAfterDate} items)`;
+
+        if (filterType === 'allBadges' && participant.completedAllBadges) {
+            subtitle = `✅ Completed all 19 skill badges (${participant.totalCompletionsAfterDate} after selected date)`;
+        } else if (filterType === 'allGames' && participant.completedAllGames) {
+            subtitle = `✅ Completed the game`;
+        } else if (filterType === 'badges') {
+            subtitle = `🏆 Skill badges completed (${participant.totalCompletionsAfterDate} items)`;
+        } else if (filterType === 'games') {
+            subtitle = `🎮 Games completed (${participant.totalCompletionsAfterDate} items)`;
+        }
+
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="modal-close">&times;</span>
+                <h3>${modalTitle} <a href="${participant.profileUrl}" target="_blank" style="font-size: 0.8em; text-decoration: none;" title="View profile">🔗</a></h3>
+                <p style="color: var(--gray-600); margin-bottom: 1rem;">
+                    ${subtitle}
+                </p>
+                <ul style="list-style: none; padding: 0; max-height: 400px; overflow-y: auto;">
+                    ${completionsList}
+                </ul>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Close modal handlers
+        const closeBtn = modal.querySelector('.modal-close');
+        closeBtn.onclick = () => {
+            modal.style.display = 'none';
+            document.body.removeChild(modal);
+        };
+
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                document.body.removeChild(modal);
+            }
+        };
+    };
+
+    /**
+     * Clear date filter
+     */
+    SkillsBoostCalculator.prototype.clearDateFilter = function() {
+        const dateInput = document.getElementById('completionDateFilter');
+        const resultsContainer = document.getElementById('dateFilterResults');
+        const clearBtn = document.getElementById('clearDateFilterBtn');
+
+        if (dateInput) {
+            dateInput.value = '';
+        }
+
+        if (resultsContainer) {
+            resultsContainer.style.display = 'none';
+        }
+
+        if (clearBtn) {
+            clearBtn.style.display = 'none';
+        }
     };
 })();

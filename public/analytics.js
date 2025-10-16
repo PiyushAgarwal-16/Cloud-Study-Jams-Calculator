@@ -84,11 +84,15 @@
 
             // Fetch data for each participant
             const analyticsData = [];
+            const failedProfiles = [];
             let completed = 0;
+            
+            console.log(`📊 Starting analytics fetch for ${total} participants...`);
 
             for (const participant of participants) {
                 try {
-                    progressText.textContent = `Fetching participant data... (${completed}/${total})`;
+                    progressText.textContent = `Fetching participant data... (${completed + 1}/${total})`;
+                    console.log(`Fetching [${completed + 1}/${total}]: ${participant.name} (${participant.profileId})`);
                     
                     const response = await fetch(`${this.apiBaseUrl}/calculate-points`, {
                         method: 'POST',
@@ -100,18 +104,50 @@
 
                     if (response.ok) {
                         const result = await response.json();
+                        const itemCount = (result.breakdown.badges.count || 0) + (result.breakdown.games.count || 0);
+                        console.log(`  ✅ ${result.userName}: ${result.breakdown.badges.count || 0} badges, ${result.breakdown.games.count || 0} games (${itemCount}/20)`);
                         analyticsData.push({
                             name: result.userName || participant.name || 'Unknown',
                             profileId: participant.profileId,
                             badges: result.breakdown.badges.count || 0,
                             games: result.breakdown.games.count || 0,
-                            totalItems: (result.breakdown.badges.count || 0) + (result.breakdown.games.count || 0),
+                            totalItems: itemCount,
                             points: result.totalPoints || 0,
-                            progress: result.progress.overall.percentage || 0
+                            progress: result.progress.overall.percentage || 0,
+                            status: 'success'
                         });
+                    } else {
+                        // Add with zero counts if API returns error
+                        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                        console.warn(`⚠️ Failed to fetch ${participant.name} (${participant.profileId}):`, errorData.error);
+                        analyticsData.push({
+                            name: participant.name || 'Unknown',
+                            profileId: participant.profileId,
+                            badges: 0,
+                            games: 0,
+                            totalItems: 0,
+                            points: 0,
+                            progress: 0,
+                            status: 'error',
+                            error: errorData.error
+                        });
+                        failedProfiles.push(participant.name || participant.profileId);
                     }
                 } catch (error) {
-                    console.error(`Error fetching data for ${participant.name}:`, error);
+                    console.error(`❌ Error fetching data for ${participant.name} (${participant.profileId}):`, error.message);
+                    // Add with zero counts if network error
+                    analyticsData.push({
+                        name: participant.name || 'Unknown',
+                        profileId: participant.profileId,
+                        badges: 0,
+                        games: 0,
+                        totalItems: 0,
+                        points: 0,
+                        progress: 0,
+                        status: 'error',
+                        error: error.message
+                    });
+                    failedProfiles.push(participant.name || participant.profileId);
                 }
                 
                 completed++;
@@ -120,12 +156,27 @@
             // Store analytics data
             this.analyticsData = analyticsData;
 
+            // Log summary
+            console.log(`✅ Successfully fetched: ${analyticsData.filter(p => p.status === 'success').length}/${total}`);
+            if (failedProfiles.length > 0) {
+                console.warn(`⚠️ Failed profiles (${failedProfiles.length}):`, failedProfiles);
+            }
+
             // Display results
             this.displayAnalytics(analyticsData, total);
 
             // Hide loading, show results
             loadingSection.style.display = 'none';
             resultsSection.style.display = 'block';
+
+            // Show warning if some profiles failed
+            if (failedProfiles.length > 0) {
+                const warningMsg = `Note: ${failedProfiles.length} profile(s) could not be fetched. Check console for details.`;
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'analytics-warning';
+                warningDiv.innerHTML = `⚠️ ${warningMsg}`;
+                resultsSection.insertBefore(warningDiv, resultsSection.firstChild);
+            }
 
         } catch (error) {
             console.error('Error fetching analytics:', error);

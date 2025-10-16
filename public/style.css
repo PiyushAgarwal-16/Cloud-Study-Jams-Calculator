@@ -1027,6 +1027,17 @@ body {
     margin-top: var(--spacing-xl);
 }
 
+.analytics-warning {
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, #FFF3CD, #FFE69C);
+    border-left: 4px solid #FFA500;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+    font-size: 0.9rem;
+    color: #856404;
+    font-weight: 500;
+}
+
 .analytics-summary h3,
 .analytics-distribution h3,
 .analytics-leaderboard h3 {

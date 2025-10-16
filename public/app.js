@@ -45,19 +45,7 @@ class SkillsBoostCalculator {
             this.validateProfileUrl(e.target);
         });
 
-        // Analytics button
-        document.getElementById('fetchAnalyticsBtn').addEventListener('click', () => {
-            this.fetchAnalytics();
-        });
-
-        // Export analytics buttons
-        document.getElementById('exportAnalyticsBtn').addEventListener('click', () => {
-            this.exportAnalytics('json');
-        });
-
-        document.getElementById('exportAnalyticsCSVBtn').addEventListener('click', () => {
-            this.exportAnalytics('csv');
-        });
+        // Note: Analytics event listeners are bound in analytics.js module
     }
 
     /**
@@ -361,5 +349,7 @@ class SkillsBoostCalculator {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new SkillsBoostCalculator();
+    const calculator = new SkillsBoostCalculator();
+    // Make calculator instance globally accessible for debugging
+    window.calculator = calculator;
 });

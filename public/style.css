@@ -163,6 +163,31 @@ body {
     z-index: 1;
 }
 
+.solution-sheet-btn {
+    display: inline-block;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius);
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-normal);
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.solution-sheet-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
 .creator a {
     color: var(--white);
     text-decoration: none;

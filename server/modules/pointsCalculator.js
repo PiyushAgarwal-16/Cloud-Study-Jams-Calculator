@@ -41,14 +41,19 @@ class PointsCalculator {
         try {
             if (fs.existsSync(this.allowedBadgesPath)) {
                 const data = fs.readFileSync(this.allowedBadgesPath, 'utf8');
-                return JSON.parse(data);
+                const parsed = JSON.parse(data);
+                console.log('✅ Loaded allowed badges config:', {
+                    totalBadges: parsed.allowedSkillBadges?.length || 0,
+                    metadata: parsed.metadata
+                });
+                return parsed;
             } else {
                 console.log('Allowed badges config not found, allowing all badges');
-                return { allowedSkillBadges: [], metadata: { totalCount: 0 } };
+                return { allowedSkillBadges: [], metadata: { totalCount: 0, badgeCount: 0, gameCount: 0 } };
             }
         } catch (error) {
             console.error('Error loading allowed badges config:', error);
-            return { allowedSkillBadges: [], metadata: { totalCount: 0 } };
+            return { allowedSkillBadges: [], metadata: { totalCount: 0, badgeCount: 0, gameCount: 0 } };
         }
     }
 
@@ -165,6 +170,23 @@ class PointsCalculator {
             // Calculate progress metrics
             this.calculateProgress(parsedProfile, result);
 
+            // Add detailed badge and game information for date filtering
+            result.detailedBadges = (parsedProfile.badges || []).map(badge => ({
+                originalTitle: badge.originalTitle,
+                normalizedTitle: badge.normalizedTitle,
+                isCompleted: badge.isCompleted,
+                earnedDate: badge.earnedDate,
+                badgeUrl: badge.badgeUrl
+            }));
+
+            result.detailedGames = (parsedProfile.games || []).map(game => ({
+                originalTitle: game.originalTitle,
+                normalizedTitle: game.normalizedTitle,
+                isCompleted: game.isCompleted,
+                completedDate: game.completedDate,
+                gameUrl: game.gameUrl
+            }));
+
             // Set total points
             result.totalPoints = 
                 result.breakdown.badges.points + 
@@ -209,8 +231,9 @@ class PointsCalculator {
             }
             
             // Match by template ID if available in badge URL
-            const templateIdMatch = badge.url && allowedBadge.templateId && 
-                badge.url.includes(`course_templates/${allowedBadge.templateId}`);
+            const badgeUrl = badge.badgeUrl || badge.url || '';
+            const templateIdMatch = badgeUrl && allowedBadge.templateId && 
+                badgeUrl.includes(`course_templates/${allowedBadge.templateId}`);
             
             return titleMatch || templateIdMatch;
         });
@@ -246,8 +269,9 @@ class PointsCalculator {
             }
             
             // Match by game ID if available
-            const gameIdMatch = game.url && allowedItem.gameId && 
-                game.url.includes(`games/${allowedItem.gameId}`);
+            const gameUrl = game.gameUrl || game.url || '';
+            const gameIdMatch = gameUrl && allowedItem.gameId && 
+                gameUrl.includes(`games/${allowedItem.gameId}`);
             
             return titleMatch || gameIdMatch;
         });
@@ -558,9 +582,9 @@ class PointsCalculator {
      * @param {object} result - Result object to populate
      */
     calculateProgress(parsedProfile, result) {
-        // Use fixed totals from allowed items list
-        const totalAllowedBadges = 19;
-        const totalAllowedGames = 1;
+        // Get totals from allowed items list metadata
+        const totalAllowedBadges = this.allowedBadges?.metadata?.badgeCount || 0;
+        const totalAllowedGames = this.allowedBadges?.metadata?.gameCount || 0;
         
         // Get completed counts from filtered results
         const completedBadges = result.breakdown.badges.count || 0;

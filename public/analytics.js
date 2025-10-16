@@ -229,7 +229,7 @@
         document.getElementById('fullyCompleted').textContent = fullyCompleted;
         document.getElementById('avgBadges').textContent = avgBadges;
         document.getElementById('avgGames').textContent = avgGames;
-        document.getElementById('overallProgress').textContent = overallProgress + '%';
+        document.getElementById('analyticsOverallProgress').textContent = overallProgress + '%';
         document.getElementById('totalPoints').textContent = totalPoints.toLocaleString();
 
         // Calculate distribution with participant names
@@ -467,6 +467,9 @@
                 break;
             case 'allGames':
                 filteredParticipants = this.filterAllGamesCompleted(filterDate);
+                break;
+            case '100percent':
+                filteredParticipants = this.filter100PercentAfterDate(filterDate);
                 break;
         }
 
@@ -730,6 +733,98 @@
     };
 
     /**
+     * Filter participants who reached 100% completion (all 19 badges + 1 game) after the specified date
+     * A participant is included if they completed the final item needed to reach 100% after the filter date
+     */
+    SkillsBoostCalculator.prototype.filter100PercentAfterDate = function(filterDate) {
+        const filtered = [];
+
+        this.analyticsData.forEach(participant => {
+            if (participant.status !== 'success') return;
+
+            const detailedBadges = participant.detailedBadges || [];
+            const detailedGames = participant.detailedGames || [];
+            
+            const completedBadges = detailedBadges.filter(b => b.isCompleted);
+            const completedGames = detailedGames.filter(g => g.isCompleted);
+
+            // Check if participant has 100% completion (19 badges + 1 game = 20 items)
+            if (completedBadges.length >= 19 && completedGames.length >= 1) {
+                // Collect all completion dates
+                const allCompletions = [];
+
+                completedBadges.forEach(badge => {
+                    if (badge.earnedDate) {
+                        allCompletions.push({
+                            type: 'badge',
+                            title: badge.normalizedTitle || badge.originalTitle,
+                            date: new Date(badge.earnedDate),
+                            dateString: badge.earnedDate
+                        });
+                    }
+                });
+
+                completedGames.forEach(game => {
+                    if (game.completedDate) {
+                        allCompletions.push({
+                            type: 'game',
+                            title: game.normalizedTitle || game.originalTitle,
+                            date: new Date(game.completedDate),
+                            dateString: game.completedDate
+                        });
+                    }
+                });
+
+                // Sort by date to find when 100% was reached
+                allCompletions.sort((a, b) => a.date - b.date);
+
+                // The date when 100% was reached is when the 20th item was completed
+                if (allCompletions.length >= 20) {
+                    const completionDate = allCompletions[19].date; // 20th item (index 19)
+                    const completionItem = allCompletions[19];
+
+                    // Check if 100% was reached after the filter date
+                    if (completionDate > filterDate) {
+                        // Find all completions that happened after the filter date
+                        const completionsAfterDate = allCompletions
+                            .filter(c => c.date > filterDate)
+                            .map(c => ({
+                                type: c.type,
+                                title: c.title,
+                                date: c.dateString
+                            }));
+
+                        // Count items completed before and after the date
+                        const itemsBeforeDate = allCompletions.filter(c => c.date <= filterDate).length;
+                        const itemsAfterDate = completionsAfterDate.length;
+
+                        filtered.push({
+                            name: participant.name,
+                            profileId: participant.profileId,
+                            profileUrl: participant.profileUrl,
+                            completions: completionsAfterDate,
+                            totalCompletionsAfterDate: itemsAfterDate,
+                            badgeCount: completionsAfterDate.filter(c => c.type === 'badge').length,
+                            gameCount: completionsAfterDate.filter(c => c.type === 'game').length,
+                            reached100Percent: true,
+                            completionDate: completionDate,
+                            completionDateString: completionItem.dateString,
+                            finalItem: {
+                                type: completionItem.type,
+                                title: completionItem.title
+                            },
+                            itemsBeforeDate: itemsBeforeDate,
+                            itemsAfterDate: itemsAfterDate
+                        });
+                    }
+                }
+            }
+        });
+
+        return filtered;
+    };
+
+    /**
      * Display date filter results
      */
     SkillsBoostCalculator.prototype.displayDateFilterResults = function(participants, filterDate, filterType) {
@@ -754,7 +849,8 @@
             'badges': 'who completed skill badges',
             'games': 'who completed the game',
             'allBadges': 'who completed ALL 19 skill badges',
-            'allGames': 'who completed the game'
+            'allGames': 'who completed the game',
+            '100percent': 'who reached 100% completion (19 badges + 1 game)'
         };
 
         // Update title
@@ -769,13 +865,21 @@
         if (summaryElement) {
             let summaryHTML = `<p><strong>Summary:</strong></p>`;
             summaryHTML += `<p>📊 Total Participants: <strong>${participants.length}</strong></p>`;
-            summaryHTML += `<p>✅ Total Completions: <strong>${totalCompletions}</strong></p>`;
             
-            if (filterType === 'all' || filterType === 'badges' || filterType === 'allBadges') {
-                summaryHTML += `<p>🏆 Skill Badges: <strong>${totalBadges}</strong></p>`;
-            }
-            if (filterType === 'all' || filterType === 'games' || filterType === 'allGames') {
-                summaryHTML += `<p>🎮 Games: <strong>${totalGames}</strong></p>`;
+            if (filterType === '100percent') {
+                summaryHTML += `<p>🎯 All reached 100% completion after the cutoff date</p>`;
+                summaryHTML += `<p>✅ Total Completions After Date: <strong>${totalCompletions}</strong></p>`;
+                summaryHTML += `<p>🏆 Skill Badges After Date: <strong>${totalBadges}</strong></p>`;
+                summaryHTML += `<p>🎮 Games After Date: <strong>${totalGames}</strong></p>`;
+            } else {
+                summaryHTML += `<p>✅ Total Completions: <strong>${totalCompletions}</strong></p>`;
+                
+                if (filterType === 'all' || filterType === 'badges' || filterType === 'allBadges') {
+                    summaryHTML += `<p>🏆 Skill Badges: <strong>${totalBadges}</strong></p>`;
+                }
+                if (filterType === 'all' || filterType === 'games' || filterType === 'allGames') {
+                    summaryHTML += `<p>🎮 Games: <strong>${totalGames}</strong></p>`;
+                }
             }
 
             summaryElement.innerHTML = summaryHTML;
@@ -789,6 +893,11 @@
         } else {
             // Sort by latest completion date (most recent first)
             participants.sort((a, b) => {
+                // For 100% filter, use the specific completion date
+                if (filterType === '100percent' && a.completionDate && b.completionDate) {
+                    return new Date(b.completionDate) - new Date(a.completionDate);
+                }
+                
                 const aDate = a.latestCompletionDate || new Date(Math.max(...a.completions.map(c => new Date(c.date))));
                 const bDate = b.latestCompletionDate || new Date(Math.max(...b.completions.map(c => new Date(c.date))));
                 return bDate - aDate;
@@ -812,7 +921,14 @@
 
                 // Build details text based on filter type
                 let detailsText = '';
-                if (filterType === 'allBadges' && participant.completedAllBadges) {
+                if (filterType === '100percent' && participant.reached100Percent) {
+                    const completionDateFormatted = new Date(participant.completionDate).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+                    detailsText = `🎯 Reached 100% on ${completionDateFormatted} • Final item: ${participant.finalItem.title} (${participant.finalItem.type}) • Had ${participant.itemsBeforeDate}/20 before cutoff`;
+                } else if (filterType === 'allBadges' && participant.completedAllBadges) {
                     detailsText = `✅ Completed all 19 badges • ${badgeCount} after selected date • Latest: ${formattedLatestDate}`;
                 } else if (filterType === 'allGames' && participant.completedAllGames) {
                     detailsText = `✅ Completed the game • Latest: ${formattedLatestDate}`;

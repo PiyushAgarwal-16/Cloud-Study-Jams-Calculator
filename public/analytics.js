@@ -100,6 +100,7 @@
             // Fetch data for each participant
             const analyticsData = [];
             const failedProfiles = [];
+            const privateProfiles = [];
             let completed = 0;
             
             console.log(`📊 Starting analytics fetch for ${total} participants...`);
@@ -138,34 +139,70 @@
                         // Add with zero counts if API returns error
                         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
                         console.warn(`⚠️ Failed to fetch ${participant.name} (${participant.profileId}):`, errorData.error);
+                        
+                        // Check if error is due to private profile
+                        const isPrivate = errorData.error && (
+                            errorData.error.includes('PROFILE_PRIVATE') || 
+                            errorData.error.includes('private') ||
+                            errorData.error.includes('Private profile')
+                        );
+                        
                         analyticsData.push({
                             name: participant.name || 'Unknown',
                             profileId: participant.profileId,
+                            profileUrl: participant.profileUrl,
                             badges: 0,
                             games: 0,
                             totalItems: 0,
                             points: 0,
                             progress: 0,
-                            status: 'error',
+                            status: isPrivate ? 'private' : 'error',
                             error: errorData.error
                         });
-                        failedProfiles.push(participant.name || participant.profileId);
+                        
+                        if (isPrivate) {
+                            privateProfiles.push({
+                                name: participant.name || 'Unknown',
+                                profileId: participant.profileId,
+                                profileUrl: participant.profileUrl
+                            });
+                        } else {
+                            failedProfiles.push(participant.name || participant.profileId);
+                        }
                     }
                 } catch (error) {
                     console.error(`❌ Error fetching data for ${participant.name} (${participant.profileId}):`, error.message);
+                    
+                    // Check if error is due to private profile
+                    const isPrivate = error.message && (
+                        error.message.includes('PROFILE_PRIVATE') || 
+                        error.message.includes('private') ||
+                        error.message.includes('Private profile')
+                    );
+                    
                     // Add with zero counts if network error
                     analyticsData.push({
                         name: participant.name || 'Unknown',
                         profileId: participant.profileId,
+                        profileUrl: participant.profileUrl,
                         badges: 0,
                         games: 0,
                         totalItems: 0,
                         points: 0,
                         progress: 0,
-                        status: 'error',
+                        status: isPrivate ? 'private' : 'error',
                         error: error.message
                     });
-                    failedProfiles.push(participant.name || participant.profileId);
+                    
+                    if (isPrivate) {
+                        privateProfiles.push({
+                            name: participant.name || 'Unknown',
+                            profileId: participant.profileId,
+                            profileUrl: participant.profileUrl
+                        });
+                    } else {
+                        failedProfiles.push(participant.name || participant.profileId);
+                    }
                 }
                 
                 completed++;
@@ -173,9 +210,13 @@
 
             // Store analytics data
             this.analyticsData = analyticsData;
+            this.privateProfiles = privateProfiles; // Store private profiles separately
 
             // Log summary
             console.log(`✅ Successfully fetched: ${analyticsData.filter(p => p.status === 'success').length}/${total}`);
+            if (privateProfiles.length > 0) {
+                console.warn(`🔒 Private profiles (${privateProfiles.length}):`, privateProfiles.map(p => p.name));
+            }
             if (failedProfiles.length > 0) {
                 console.warn(`⚠️ Failed profiles (${failedProfiles.length}):`, failedProfiles);
             }
@@ -192,6 +233,9 @@
             if (dateFilterSection) {
                 dateFilterSection.style.display = 'block';
             }
+
+            // Always show private profiles status (even if none)
+            this.displayPrivateProfilesStatus(privateProfiles);
 
             // Show warning if some profiles failed
             if (failedProfiles.length > 0) {
@@ -360,6 +404,76 @@
     };
 
     /**
+     * Display status for private profiles (warning if any, success message if none)
+     */
+    SkillsBoostCalculator.prototype.displayPrivateProfilesStatus = function(privateProfiles) {
+        const resultsSection = document.getElementById('analyticsResults');
+        if (!resultsSection) return;
+
+        // Remove any existing private profiles status
+        const existingStatus = document.getElementById('privateProfilesStatus');
+        if (existingStatus) {
+            existingStatus.remove();
+        }
+
+        // Create status card
+        const statusCard = document.createElement('div');
+        statusCard.id = 'privateProfilesStatus';
+        
+        if (privateProfiles.length === 0) {
+            // No private profiles - show success message
+            statusCard.className = 'analytics-success-card';
+            statusCard.innerHTML = `
+                <div class="success-header">
+                    <span class="success-icon">✅</span>
+                    <h3>All Profiles Accessible</h3>
+                </div>
+                <div class="success-body">
+                    <p>Great! All participant profiles are public and accessible for tracking.</p>
+                </div>
+            `;
+        } else {
+            // Private profiles detected - show warning
+            statusCard.className = 'analytics-warning-card private-profiles-card';
+            statusCard.innerHTML = `
+                <div class="warning-header">
+                    <span class="warning-icon">🔒</span>
+                    <h3>Private Profiles Detected</h3>
+                </div>
+                <div class="warning-body">
+                    <p><strong>${privateProfiles.length} participant${privateProfiles.length !== 1 ? 's have' : ' has'} made their profile${privateProfiles.length !== 1 ? 's' : ''} private.</strong></p>
+                    <p>These profiles cannot be accessed and their progress cannot be tracked.</p>
+                    
+                    <div class="private-profiles-list">
+                        <h4>Private Profiles (${privateProfiles.length}):</h4>
+                        <ul class="private-profiles-items">
+                            ${privateProfiles.map(p => `
+                                <li class="private-profile-item">
+                                    <span class="private-profile-name">${this.escapeHtml(p.name)}</span>
+                                    <span class="private-profile-id">${p.profileId}</span>
+                                    <a href="${p.profileUrl}" target="_blank" class="private-profile-link" title="Attempt to view profile">🔗</a>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="warning-actions">
+                        <button class="btn btn-secondary" onclick="this.closest('.analytics-warning-card').classList.toggle('collapsed')">
+                            <span class="toggle-text">Collapse</span>
+                        </button>
+                        <button class="btn btn-outline" onclick="navigator.clipboard.writeText(${JSON.stringify(privateProfiles.map(p => p.name).join(', '))}).then(() => alert('Private profile names copied to clipboard!'))">
+                            📋 Copy Names
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Insert at the top of results section
+        resultsSection.insertBefore(statusCard, resultsSection.firstChild);
+    };
+
+    /**
      * Export analytics data
      */
     SkillsBoostCalculator.prototype.exportAnalytics = function(format) {
@@ -382,6 +496,8 @@
         const exportData = {
             generatedAt: new Date().toISOString(),
             totalParticipants: this.analyticsData.length,
+            privateProfiles: this.privateProfiles || [],
+            privateProfilesCount: (this.privateProfiles || []).length,
             participants: this.analyticsData
         };
 
@@ -400,7 +516,7 @@
      * Export analytics as CSV
      */
     SkillsBoostCalculator.prototype.exportAsCSV = function() {
-        const headers = ['Name', 'Profile ID', 'Badges Completed', 'Games Completed', 'Total Items', 'Points', 'Progress %'];
+        const headers = ['Name', 'Profile ID', 'Badges Completed', 'Games Completed', 'Total Items', 'Points', 'Progress %', 'Status'];
         const rows = this.analyticsData.map(p => [
             p.name,
             p.profileId,
@@ -408,13 +524,24 @@
             p.games,
             p.totalItems,
             p.points,
-            p.progress
+            p.progress,
+            p.status === 'private' ? 'PRIVATE PROFILE' : (p.status === 'error' ? 'ERROR' : 'OK')
         ]);
 
         let csv = headers.join(',') + '\n';
         rows.forEach(row => {
             csv += row.map(cell => `"${cell}"`).join(',') + '\n';
         });
+        
+        // Add private profiles section if any
+        if (this.privateProfiles && this.privateProfiles.length > 0) {
+            csv += '\n\n';
+            csv += 'Private Profiles:\n';
+            csv += 'Name,Profile ID,Profile URL\n';
+            this.privateProfiles.forEach(p => {
+                csv += `"${p.name}","${p.profileId}","${p.profileUrl}"\n`;
+            });
+        }
 
         const dataBlob = new Blob([csv], { type: 'text/csv' });
         

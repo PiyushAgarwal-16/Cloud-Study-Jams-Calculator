@@ -110,6 +110,12 @@ class ProfileFetcher {
         try {
             const $ = cheerio.load(htmlContent);
             
+            // Check if profile is private
+            const isPrivate = this.checkIfPrivate($, htmlContent);
+            if (isPrivate) {
+                throw new Error('PROFILE_PRIVATE');
+            }
+            
             // Initialize result object
             const profileData = {
                 profileUrl: profileUrl,
@@ -145,8 +151,64 @@ class ProfileFetcher {
 
         } catch (error) {
             console.error('Error parsing profile HTML:', error);
-            throw new Error(`Failed to parse profile data: ${error.message}`);
+            throw error;
         }
+    }
+
+    /**
+     * Check if profile is private
+     * @param {object} $ - Cheerio instance
+     * @param {string} htmlContent - Raw HTML content
+     * @returns {boolean} True if profile is private
+     */
+    checkIfPrivate($, htmlContent) {
+        // Check for common indicators of a private profile
+        
+        // 1. Check for private profile message
+        const privateMessages = [
+            'This profile is private',
+            'profile is not public',
+            'Profile not available',
+            'This user has made their profile private',
+            'private profile'
+        ];
+        
+        const bodyText = $('body').text().toLowerCase();
+        for (const message of privateMessages) {
+            if (bodyText.includes(message.toLowerCase())) {
+                return true;
+            }
+        }
+        
+        // 2. Check if there's a privacy indicator element
+        const privateIndicators = [
+            '.private-profile',
+            '.profile-private',
+            '[data-private="true"]',
+            '.privacy-message'
+        ];
+        
+        for (const selector of privateIndicators) {
+            if ($(selector).length > 0) {
+                return true;
+            }
+        }
+        
+        // 3. Check if profile has no badges and no games but shows profile structure
+        // (could indicate private profile with hidden content)
+        const hasBadgeSection = $('.profile-badge').length > 0 || $('[class*="badge"]').length > 0;
+        const hasName = $('.profile-name, .user-name, h1').first().text().trim().length > 0;
+        
+        // If there's a name but absolutely no badge-related elements, might be private
+        // However, this is a weak indicator, so we only use it in combination with other checks
+        
+        // 4. Check for redirect or error page
+        const pageTitle = $('title').text().toLowerCase();
+        if (pageTitle.includes('error') || pageTitle.includes('not found') || pageTitle.includes('private')) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**

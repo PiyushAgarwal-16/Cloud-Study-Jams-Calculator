@@ -126,3 +126,4 @@ tmp/
 # Application specific
 data/profiles/*.json
 backups/
+.vercel

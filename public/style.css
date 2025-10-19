@@ -1038,6 +1038,166 @@ body {
     font-weight: 500;
 }
 
+/* Private Profiles Warning Card */
+.analytics-warning-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+    overflow: hidden;
+    border: 2px solid #ff6b6b;
+}
+
+.private-profiles-card {
+    border-color: #FFA500;
+}
+
+/* Success Card for No Private Profiles */
+.analytics-success-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+    overflow: hidden;
+    border: 2px solid #28a745;
+}
+
+.success-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, #e6f7ed, #d4edda);
+    border-bottom: 1px solid #c3e6cb;
+}
+
+.success-icon {
+    font-size: 1.5rem;
+}
+
+.success-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    color: #155724;
+}
+
+.success-body {
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.success-body p {
+    margin: 0;
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
+.warning-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, #fff5e6, #ffe6cc);
+    border-bottom: 1px solid #ffcc99;
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+}
+
+.warning-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    color: #cc7a00;
+}
+
+.warning-body {
+    padding: var(--spacing-lg);
+}
+
+.warning-body p {
+    margin-bottom: var(--spacing-md);
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
+.private-profiles-list {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+}
+
+.private-profiles-list h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: var(--font-size-md);
+    color: var(--gray-800);
+}
+
+.private-profiles-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.private-profile-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: white;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-xs);
+    border: 1px solid #e9ecef;
+}
+
+.private-profile-item:hover {
+    background: #f1f3f5;
+    border-color: #dee2e6;
+}
+
+.private-profile-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.private-profile-id {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--gray-500);
+}
+
+.private-profile-link {
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+
+.private-profile-link:hover {
+    transform: scale(1.2);
+}
+
+.warning-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.analytics-warning-card.collapsed .warning-body {
+    display: none;
+}
+
+.analytics-warning-card.collapsed .toggle-text::after {
+    content: 'Expand';
+}
+
+.analytics-warning-card:not(.collapsed) .toggle-text::after {
+    content: 'Collapse';
+}
+
 .analytics-summary h3,
 .analytics-distribution h3,
 .analytics-leaderboard h3 {

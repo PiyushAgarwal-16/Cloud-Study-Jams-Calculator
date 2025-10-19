@@ -31,28 +31,67 @@ app.get('/', (req, res) => {
 // API endpoint to verify profile and calculate points
 app.post('/api/calculate-points', async (req, res) => {
     try {
-        const { profileUrl } = req.body;
+        const { email, profileUrl } = req.body;
 
-        // Validate input
-        if (!profileUrl) {
+        let actualProfileUrl = profileUrl;
+        let participant = null;
+
+        // If email is provided, look up the profile URL
+        if (email) {
+            // Validate email format
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                return res.status(400).json({ error: 'Invalid email format' });
+            }
+
+            // Check enrollment by email
+            const isEnrolled = await enrollmentChecker.checkEnrollmentByEmail(email);
+            if (!isEnrolled) {
+                return res.status(403).json({ 
+                    error: 'Email not found in enrolled participants list. Please check your email address or contact the program administrator.',
+                    enrolled: false 
+                });
+            }
+
+            // Get participant info by email
+            participant = enrollmentChecker.getParticipantByEmail(email);
+            if (!participant || !participant.profileUrl) {
+                return res.status(404).json({ 
+                    error: 'Profile URL not found for this email. Please contact the program administrator.',
+                    enrolled: false 
+                });
+            }
+
+            actualProfileUrl = participant.profileUrl;
+            console.log(`📧 Email lookup: ${email} → ${participant.name} → ${actualProfileUrl}`);
+        } else if (profileUrl) {
+            // Legacy support: direct profile URL
+            // Validate input
+            if (!profileUrl) {
+                return res.status(400).json({ 
+                    error: 'Profile URL is required' 
+                });
+            }
+
+            // Check if profile is enrolled
+            const isEnrolled = await enrollmentChecker.checkEnrollment(profileUrl);
+            if (!isEnrolled) {
+                return res.status(403).json({ 
+                    error: 'Profile is not enrolled in the program' 
+                });
+            }
+
+            // Get participant details
+            participant = enrollmentChecker.getParticipantByUrl(profileUrl);
+            actualProfileUrl = profileUrl;
+        } else {
             return res.status(400).json({ 
-                error: 'Profile URL is required' 
+                error: 'Email or Profile URL is required' 
             });
         }
-
-        // Check if profile is enrolled
-        const isEnrolled = await enrollmentChecker.checkEnrollment(profileUrl);
-        if (!isEnrolled) {
-            return res.status(403).json({ 
-                error: 'Profile is not enrolled in the program' 
-            });
-        }
-
-        // Get participant details
-        const participant = enrollmentChecker.getParticipantByUrl(profileUrl);
 
         // Fetch profile data
-        const profileData = await profileFetcher.fetchProfile(profileUrl);
+        const profileData = await profileFetcher.fetchProfile(actualProfileUrl);
         
         // Parse badges and games from profile
         const parsedData = profileParser.parseProfile(profileData);
@@ -62,8 +101,13 @@ app.post('/api/calculate-points', async (req, res) => {
 
         res.json({
             success: true,
-            participant: participant,
-            profileUrl: profileUrl,
+            participant: {
+                name: participant?.name || 'Unknown',
+                email: participant?.email || null,
+                batch: participant?.batch || 'Unknown',
+                enrollmentDate: participant?.enrollmentDate || null
+            },
+            profileUrl: actualProfileUrl,
             totalPoints: result.totalPoints,
             completedBadges: result.completedBadges,
             completedGames: result.completedGames,

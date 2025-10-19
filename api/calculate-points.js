@@ -25,36 +25,67 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const { profileUrl } = req.body;
-
-        if (!profileUrl) {
-            return res.status(400).json({ error: 'Profile URL is required' });
-        }
+        const { email, profileUrl } = req.body;
 
         // Initialize enrollment checker
         const enrollmentChecker = new EnrollmentChecker();
 
-        // Validate URL format
-        const urlPattern = /^https?:\/\/(www\.)?cloudskillsboost\.google\/public_profiles\/[a-zA-Z0-9\-_]+/i;
-        if (!urlPattern.test(profileUrl)) {
-            return res.status(400).json({ error: 'Invalid profile URL format' });
-        }
+        let actualProfileUrl = profileUrl;
+        let participant = null;
 
-        // Check enrollment
-        const isEnrolled = await enrollmentChecker.isEnrolled(profileUrl);
-        if (!isEnrolled) {
-            return res.status(403).json({ 
-                error: 'Profile not found in enrolled participants list. Please contact the program administrator.',
-                enrolled: false 
-            });
-        }
+        // If email is provided, look up the profile URL
+        if (email) {
+            // Validate email format
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                return res.status(400).json({ error: 'Invalid email format' });
+            }
 
-        // Get participant info
-        const participant = await enrollmentChecker.getParticipantByUrl(profileUrl);
+            // Check enrollment by email
+            const isEnrolled = await enrollmentChecker.checkEnrollmentByEmail(email);
+            if (!isEnrolled) {
+                return res.status(403).json({ 
+                    error: 'Email not found in enrolled participants list. Please check your email address or contact the program administrator.',
+                    enrolled: false 
+                });
+            }
+
+            // Get participant info by email
+            participant = await enrollmentChecker.getParticipantByEmail(email);
+            if (!participant || !participant.profileUrl) {
+                return res.status(404).json({ 
+                    error: 'Profile URL not found for this email. Please contact the program administrator.',
+                    enrolled: false 
+                });
+            }
+
+            actualProfileUrl = participant.profileUrl;
+        } else if (profileUrl) {
+            // Legacy support: direct profile URL
+            // Validate URL format
+            const urlPattern = /^https?:\/\/(www\.)?cloudskillsboost\.google\/public_profiles\/[a-zA-Z0-9\-_]+/i;
+            if (!urlPattern.test(profileUrl)) {
+                return res.status(400).json({ error: 'Invalid profile URL format' });
+            }
+
+            // Check enrollment
+            const isEnrolled = await enrollmentChecker.isEnrolled(profileUrl);
+            if (!isEnrolled) {
+                return res.status(403).json({ 
+                    error: 'Profile not found in enrolled participants list. Please contact the program administrator.',
+                    enrolled: false 
+                });
+            }
+
+            // Get participant info
+            participant = await enrollmentChecker.getParticipantByUrl(profileUrl);
+        } else {
+            return res.status(400).json({ error: 'Email or Profile URL is required' });
+        }
 
         // Fetch and parse profile
-        console.log('Fetching profile:', profileUrl);
-        const profileData = await profileFetcher.fetchProfile(profileUrl);
+        console.log('Fetching profile:', actualProfileUrl);
+        const profileData = await profileFetcher.fetchProfile(actualProfileUrl);
         
         console.log('Parsing profile data');
         const parsedProfile = await profileParser.parseProfile(profileData);

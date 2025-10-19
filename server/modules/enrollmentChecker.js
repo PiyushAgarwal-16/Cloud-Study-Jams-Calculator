@@ -219,6 +219,52 @@ class EnrollmentChecker {
     }
 
     /**
+     * Get participant details by email address
+     * @param {string} email - The email address to search for
+     * @returns {object|null} Participant object or null if not found
+     */
+    getParticipantByEmail(email) {
+        try {
+            if (!email) {
+                return null;
+            }
+
+            const normalizedEmail = email.trim().toLowerCase();
+            
+            return this.enrollmentList.find(participant => {
+                if (typeof participant === 'object' && participant.email) {
+                    return participant.email.toLowerCase() === normalizedEmail;
+                }
+                return false;
+            }) || null;
+
+        } catch (error) {
+            console.error('Error getting participant by email:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Check if an email is enrolled
+     * @param {string} email - The email address to check
+     * @returns {Promise<boolean>} True if enrolled, false otherwise
+     */
+    async checkEnrollmentByEmail(email) {
+        try {
+            if (!email) {
+                return false;
+            }
+
+            const participant = this.getParticipantByEmail(email);
+            return participant !== null;
+
+        } catch (error) {
+            console.error('Error checking enrollment by email:', error);
+            return false;
+        }
+    }
+
+    /**
      * Get enrollment statistics
      * @returns {object} Statistics about enrollment
      */
@@ -275,9 +321,11 @@ const enrollmentChecker = new EnrollmentChecker();
 module.exports = {
     checkEnrollment: (profileUrl) => enrollmentChecker.checkEnrollment(profileUrl),
     isEnrolled: (profileUrl) => enrollmentChecker.isEnrolled(profileUrl),
+    checkEnrollmentByEmail: (email) => enrollmentChecker.checkEnrollmentByEmail(email),
     addParticipant: (participant) => enrollmentChecker.addParticipant(participant),
     getEnrollmentList: () => enrollmentChecker.getEnrollmentList(),
     getParticipantByUrl: (profileUrl) => enrollmentChecker.getParticipantByUrl(profileUrl),
+    getParticipantByEmail: (email) => enrollmentChecker.getParticipantByEmail(email),
     getStats: () => enrollmentChecker.getStats(),
     loadEnrolledParticipants: () => enrollmentChecker.loadEnrolledParticipants(),
     normalizeProfileUrl: (url) => enrollmentChecker.normalizeProfileUrl(url),

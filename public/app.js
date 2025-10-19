@@ -40,9 +40,9 @@ class SkillsBoostCalculator {
             this.resetForm();
         });
 
-        // URL input validation
-        document.getElementById('profileUrl').addEventListener('input', (e) => {
-            this.validateProfileUrl(e.target);
+        // Email input validation
+        document.getElementById('userEmail').addEventListener('input', (e) => {
+            this.validateEmail(e.target);
         });
     }
 
@@ -69,55 +69,55 @@ class SkillsBoostCalculator {
     }
 
     /**
-     * Validate profile URL format
+     * Validate email format
      */
-    validateProfileUrl(input) {
-        const url = input.value.trim();
-        const isValid = this.isValidProfileUrl(url);
+    validateEmail(input) {
+        const email = input.value.trim();
+        const isValid = this.isValidEmail(email);
         
-        if (url && !isValid) {
-            input.setCustomValidity('Please enter a valid Google Cloud Skills Boost profile URL');
+        if (email && !isValid) {
+            input.setCustomValidity('Please enter a valid email address');
         } else {
             input.setCustomValidity('');
         }
     }
 
     /**
-     * Check if URL is a valid profile URL
+     * Check if email is valid
      */
-    isValidProfileUrl(url) {
-        if (!url) return false;
+    isValidEmail(email) {
+        if (!email) return false;
         
-        const pattern = /^https?:\/\/(www\.)?cloudskillsboost\.google\/public_profiles\/[a-zA-Z0-9\-_]+/i;
-        return pattern.test(url);
+        const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return pattern.test(email);
     }
 
     /**
      * Main function to calculate points
      */
     async calculatePoints() {
-        const profileUrl = document.getElementById('profileUrl').value.trim();
+        const userEmail = document.getElementById('userEmail').value.trim();
 
-        if (!profileUrl) {
-            this.showError('Please enter a profile URL');
+        if (!userEmail) {
+            this.showError('Please enter your email address');
             return;
         }
 
-        if (!this.isValidProfileUrl(profileUrl)) {
-            this.showError('Please enter a valid Google Cloud Skills Boost profile URL');
+        if (!this.isValidEmail(userEmail)) {
+            this.showError('Please enter a valid email address');
             return;
         }
 
         try {
             this.showLoading();
-            this.updateLoadingStatus('Verifying enrollment...');
+            this.updateLoadingStatus('Looking up your profile...');
 
             const response = await fetch(`${this.apiBaseUrl}/calculate-points`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ profileUrl })
+                body: JSON.stringify({ email: userEmail })
             });
 
             if (!response.ok) {

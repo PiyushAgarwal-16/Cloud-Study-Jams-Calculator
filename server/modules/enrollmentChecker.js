@@ -228,6 +228,45 @@ class EnrollmentChecker {
             lastUpdated: new Date().toISOString()
         };
     }
+
+    /**
+     * Load enrolled participants with full metadata
+     * @returns {object} Participants data with metadata
+     */
+    loadEnrolledParticipants() {
+        try {
+            if (fs.existsSync(this.enrollmentListPath)) {
+                const data = fs.readFileSync(this.enrollmentListPath, 'utf8');
+                return JSON.parse(data);
+            } else {
+                return {
+                    lastUpdated: new Date().toISOString(),
+                    totalParticipants: 0,
+                    batch: '',
+                    program: '',
+                    participants: []
+                };
+            }
+        } catch (error) {
+            console.error('Error loading enrolled participants:', error);
+            return {
+                lastUpdated: new Date().toISOString(),
+                totalParticipants: 0,
+                batch: '',
+                program: '',
+                participants: []
+            };
+        }
+    }
+
+    /**
+     * Check if a profile URL is enrolled (alias for checkEnrollment for compatibility)
+     * @param {string} profileUrl - The profile URL to check
+     * @returns {Promise<boolean>} True if enrolled, false otherwise
+     */
+    async isEnrolled(profileUrl) {
+        return await this.checkEnrollment(profileUrl);
+    }
 }
 
 // Create singleton instance
@@ -235,10 +274,12 @@ const enrollmentChecker = new EnrollmentChecker();
 
 module.exports = {
     checkEnrollment: (profileUrl) => enrollmentChecker.checkEnrollment(profileUrl),
+    isEnrolled: (profileUrl) => enrollmentChecker.isEnrolled(profileUrl),
     addParticipant: (participant) => enrollmentChecker.addParticipant(participant),
     getEnrollmentList: () => enrollmentChecker.getEnrollmentList(),
     getParticipantByUrl: (profileUrl) => enrollmentChecker.getParticipantByUrl(profileUrl),
     getStats: () => enrollmentChecker.getStats(),
+    loadEnrolledParticipants: () => enrollmentChecker.loadEnrolledParticipants(),
     normalizeProfileUrl: (url) => enrollmentChecker.normalizeProfileUrl(url),
     extractProfileId: (url) => enrollmentChecker.extractProfileId(url)
 };

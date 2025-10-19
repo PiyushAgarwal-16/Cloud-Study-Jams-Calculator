@@ -22,12 +22,14 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const enrollmentChecker = new EnrollmentChecker();
-        const participants = await enrollmentChecker.loadEnrolledParticipants();
+        const participants = EnrollmentChecker.loadEnrolledParticipants();
         
         res.status(200).json({
             success: true,
             totalParticipants: participants.totalParticipants || 0,
+            batch: participants.batch || '',
+            program: participants.program || '',
+            lastUpdated: participants.lastUpdated || new Date().toISOString(),
             participants: participants.participants || []
         });
     } catch (error) {

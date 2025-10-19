@@ -69,6 +69,7 @@ module.exports = async (req, res) => {
             enrolled: true,
             participant: {
                 name: participant.name || 'Unknown',
+                email: participant.email || null,
                 batch: participant.batch || 'Unknown',
                 enrollmentDate: participant.enrollmentDate || null
             },

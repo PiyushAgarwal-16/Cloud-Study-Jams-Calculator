@@ -149,6 +149,20 @@ class SkillsBoostCalculator {
         this.hideLoading();
         this.hideError();
 
+        // Update participant information
+        if (results.participant) {
+            document.getElementById('participantName').textContent = results.participant.name || 'Unknown';
+            document.getElementById('participantBatch').textContent = results.participant.batch || 'Unknown';
+            
+            // Show email if available
+            if (results.participant.email) {
+                document.getElementById('participantEmail').textContent = results.participant.email;
+                document.getElementById('participantEmailContainer').style.display = 'flex';
+            } else {
+                document.getElementById('participantEmailContainer').style.display = 'none';
+            }
+        }
+
         // Update summary
         document.getElementById('completedBadgesCount').textContent = results.completedBadges.length;
         document.getElementById('completedGamesCount').textContent = results.completedGames.length;

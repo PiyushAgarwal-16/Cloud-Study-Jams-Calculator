@@ -211,14 +211,22 @@
             // Store analytics data
             this.analyticsData = analyticsData;
             this.privateProfiles = privateProfiles; // Store private profiles separately
+            
+            // Store failed profiles with full details
+            this.failedProfiles = analyticsData.filter(p => p.status === 'error').map(p => ({
+                name: p.name,
+                profileId: p.profileId,
+                profileUrl: p.profileUrl,
+                error: p.error || 'Unknown error'
+            }));
 
             // Log summary
             console.log(`✅ Successfully fetched: ${analyticsData.filter(p => p.status === 'success').length}/${total}`);
             if (privateProfiles.length > 0) {
                 console.warn(`🔒 Private profiles (${privateProfiles.length}):`, privateProfiles.map(p => p.name));
             }
-            if (failedProfiles.length > 0) {
-                console.warn(`⚠️ Failed profiles (${failedProfiles.length}):`, failedProfiles);
+            if (this.failedProfiles.length > 0) {
+                console.warn(`⚠️ Failed profiles (${this.failedProfiles.length}):`, this.failedProfiles);
             }
 
             // Display results
@@ -237,14 +245,8 @@
             // Always show private profiles status (even if none)
             this.displayPrivateProfilesStatus(privateProfiles);
 
-            // Show warning if some profiles failed
-            if (failedProfiles.length > 0) {
-                const warningMsg = `Note: ${failedProfiles.length} profile(s) could not be fetched. Check console for details.`;
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'analytics-warning';
-                warningDiv.innerHTML = `⚠️ ${warningMsg}`;
-                resultsSection.insertBefore(warningDiv, resultsSection.firstChild);
-            }
+            // Show failed profiles status (even if none)
+            this.displayFailedProfilesStatus(this.failedProfiles);
 
         } catch (error) {
             console.error('Error fetching analytics:', error);
@@ -471,6 +473,91 @@
         
         // Insert at the top of results section
         resultsSection.insertBefore(statusCard, resultsSection.firstChild);
+    };
+
+    /**
+     * Display status for failed profile fetches (error if any, success message if none)
+     */
+    SkillsBoostCalculator.prototype.displayFailedProfilesStatus = function(failedProfiles) {
+        const resultsSection = document.getElementById('analyticsResults');
+        if (!resultsSection) return;
+
+        // Remove any existing failed profiles status
+        const existingStatus = document.getElementById('failedProfilesStatus');
+        if (existingStatus) {
+            existingStatus.remove();
+        }
+
+        // Create status card
+        const statusCard = document.createElement('div');
+        statusCard.id = 'failedProfilesStatus';
+        
+        if (failedProfiles.length === 0) {
+            // No failed profiles - show success message
+            statusCard.className = 'analytics-success-card';
+            statusCard.innerHTML = `
+                <div class="success-header">
+                    <span class="success-icon">✅</span>
+                    <h3>All Profiles Fetched Successfully</h3>
+                </div>
+                <div class="success-body">
+                    <p>Excellent! All participant profiles were fetched without errors.</p>
+                </div>
+            `;
+        } else {
+            // Failed profiles detected - show error details
+            statusCard.className = 'analytics-error-card failed-profiles-card';
+            statusCard.innerHTML = `
+                <div class="error-header">
+                    <span class="error-icon">⚠️</span>
+                    <h3>Profile Fetch Errors</h3>
+                </div>
+                <div class="error-body">
+                    <p><strong>${failedProfiles.length} profile${failedProfiles.length !== 1 ? 's' : ''} could not be fetched due to errors.</strong></p>
+                    <p>These profiles encountered technical issues and could not be analyzed.</p>
+                    
+                    <div class="failed-profiles-list">
+                        <h4>Failed Profiles (${failedProfiles.length}):</h4>
+                        <ul class="failed-profiles-items">
+                            ${failedProfiles.map(p => `
+                                <li class="failed-profile-item">
+                                    <div class="failed-profile-header">
+                                        <span class="failed-profile-name">${this.escapeHtml(p.name)}</span>
+                                        <span class="failed-profile-id">${p.profileId}</span>
+                                        <a href="${p.profileUrl}" target="_blank" class="failed-profile-link" title="Attempt to view profile">🔗</a>
+                                    </div>
+                                    <div class="failed-profile-error">
+                                        <span class="error-label">Error:</span> ${this.escapeHtml(p.error)}
+                                    </div>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="error-actions">
+                        <button class="btn btn-secondary" onclick="this.closest('.analytics-error-card').classList.toggle('collapsed')">
+                            <span class="toggle-text">Collapse</span>
+                        </button>
+                        <button class="btn btn-outline" onclick="navigator.clipboard.writeText(${JSON.stringify(failedProfiles.map(p => `${p.name} (${p.profileId}): ${p.error}`).join('\\n'))}).then(() => alert('Failed profile details copied to clipboard!'))">
+                            📋 Copy Details
+                        </button>
+                        <button class="btn btn-outline" onclick="navigator.clipboard.writeText(${JSON.stringify(failedProfiles.map(p => p.name).join(', '))}).then(() => alert('Failed profile names copied to clipboard!'))">
+                            📋 Copy Names
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Insert after private profiles status if it exists, otherwise at the top
+        const privateProfilesStatus = document.getElementById('privateProfilesStatus');
+        if (privateProfilesStatus && privateProfilesStatus.nextSibling) {
+            resultsSection.insertBefore(statusCard, privateProfilesStatus.nextSibling);
+        } else if (privateProfilesStatus) {
+            privateProfilesStatus.parentNode.insertBefore(statusCard, privateProfilesStatus.nextSibling);
+        } else {
+            resultsSection.insertBefore(statusCard, resultsSection.firstChild);
+        }
     };
 
     /**

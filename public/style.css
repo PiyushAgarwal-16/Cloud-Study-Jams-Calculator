@@ -1052,6 +1052,145 @@ body {
     border-color: #FFA500;
 }
 
+/* Error Card for Failed Profile Fetches */
+.analytics-error-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-lg);
+    overflow: hidden;
+    border: 2px solid #dc3545;
+}
+
+.failed-profiles-card {
+    border-color: #e74c3c;
+}
+
+.error-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: linear-gradient(135deg, #ffe6e6, #ffd6d6);
+    border-bottom: 1px solid #ffb3b3;
+}
+
+.error-icon {
+    font-size: 1.5rem;
+}
+
+.error-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    color: #c0392b;
+}
+
+.error-body {
+    padding: var(--spacing-lg);
+}
+
+.error-body p {
+    margin-bottom: var(--spacing-md);
+    color: var(--gray-700);
+    line-height: 1.6;
+}
+
+.failed-profiles-list {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+}
+
+.failed-profiles-list h4 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: var(--font-size-md);
+    color: var(--gray-800);
+}
+
+.failed-profiles-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.failed-profile-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: white;
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-xs);
+    border: 1px solid #e9ecef;
+}
+
+.failed-profile-item:hover {
+    background: #f1f3f5;
+    border-color: #dee2e6;
+}
+
+.failed-profile-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.failed-profile-name {
+    flex: 1;
+    font-weight: 600;
+    color: var(--gray-800);
+}
+
+.failed-profile-id {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--gray-500);
+}
+
+.failed-profile-link {
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+
+.failed-profile-link:hover {
+    transform: scale(1.2);
+}
+
+.failed-profile-error {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+    border-radius: 3px;
+    font-size: 0.9rem;
+    color: #856404;
+}
+
+.error-label {
+    font-weight: 600;
+    color: #721c24;
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.analytics-error-card.collapsed .error-body {
+    display: none;
+}
+
+.analytics-error-card.collapsed .toggle-text::after {
+    content: 'Expand';
+}
+
+.analytics-error-card:not(.collapsed) .toggle-text::after {
+    content: 'Collapse';
+}
+
 /* Success Card for No Private Profiles */
 .analytics-success-card {
     background: white;

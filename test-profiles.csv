@@ -1,0 +1,4 @@
+Name,Email,Profile URL
+Test User 1,test1@example.com,https://www.cloudskillsboost.google/public_profiles/ae7f6b21-80f2-486c-879d-f85dde60dcef
+Test User 2 (Private),test2@example.com,https://www.cloudskillsboost.google/public_profiles/eb08a747-53b2-45a6-a053-3b6753a27def
+Test User 3,test3@example.com,https://www.cloudskillsboost.google/public_profiles/invalid-profile-id

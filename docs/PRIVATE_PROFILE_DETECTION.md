@@ -16,9 +16,12 @@ Previously, when a participant made their profile private, the system would simp
 
 ### 1. Detection Logic
 The system checks for private profiles during the profile fetching process by:
-- Checking for private profile messages in the HTML ("This profile is private", etc.)
+- **Detecting redirects to homepage** (primary method - private profiles redirect to https://www.cloudskillsboost.google/)
+- Checking for private profile messages in the HTML ("This profile is private", "Sorry, access denied to this resource", etc.)
 - Looking for privacy indicator elements in the page
 - Checking page titles for "private" or "error" keywords
+- Detecting "access denied" messages (shown when signed in with account)
+- Detecting "Please sign in to access this content" (shown when not signed in)
 - Detecting empty profiles with no badge/game data
 
 ### 2. Error Handling

@@ -181,6 +181,77 @@ app.use((err, req, res, next) => {
     });
 });
 
+// API endpoint to check profile accessibility (public/private)
+// Does NOT check enrollment - just accessibility
+app.post('/api/check-profile', async (req, res) => {
+    try {
+        const { profileUrl } = req.body;
+
+        // Validate input
+        if (!profileUrl) {
+            return res.status(400).json({ 
+                success: false,
+                error: 'Profile URL is required' 
+            });
+        }
+
+        // Validate URL format
+        if (!profileUrl.includes('cloudskillsboost.google') || !profileUrl.includes('public_profiles')) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid profile URL format'
+            });
+        }
+
+        console.log(`🔍 Checking accessibility for: ${profileUrl}`);
+
+        // Fetch profile data (without enrollment check)
+        const profileData = await profileFetcher.fetchProfile(profileUrl);
+        
+        // Profile fetcher will throw error if private or inaccessible
+        // If we get here, profile is accessible
+        console.log('  ✅ Profile is ACCESSIBLE (public)');
+        
+        return res.json({
+            success: true,
+            status: 'accessible',
+            accessible: true,
+            message: 'Profile is publicly accessible',
+            profileUrl
+        });
+
+    } catch (error) {
+        console.error('❌ Error checking profile:', error.message);
+
+        // Check if it's a private profile error
+        const errorMsg = error.message.toLowerCase();
+        if (errorMsg.includes('private') || 
+            errorMsg.includes('not public') || 
+            errorMsg.includes('access denied') ||
+            errorMsg.includes('sorry, access denied to this resource') ||
+            errorMsg.includes('please sign in to access this content') ||
+            errorMsg.includes('redirected to homepage')) {
+            console.log('  🔒 Profile is PRIVATE');
+            return res.json({
+                success: true,
+                status: 'private',
+                accessible: false,
+                message: 'Profile is set to private',
+                profileUrl: req.body.profileUrl
+            });
+        }
+
+        // Other errors
+        return res.json({
+            success: true,
+            status: 'error',
+            accessible: false,
+            message: error.message || 'Unable to access profile',
+            profileUrl: req.body.profileUrl
+        });
+    }
+});
+
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({ 

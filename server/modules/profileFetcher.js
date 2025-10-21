@@ -52,7 +52,37 @@ class ProfileFetcher {
 
             console.log(`Fetching profile: ${normalizedUrl}`);
             
-            const response = await this.httpClient.get(normalizedUrl);
+            // Track if we were redirected
+            let wasRedirected = false;
+            let finalUrl = normalizedUrl;
+            
+            const response = await this.httpClient.get(normalizedUrl, {
+                maxRedirects: 5,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 400; // Accept redirects
+                },
+                // Track redirects using interceptors
+                beforeRedirect: (options, { headers }) => {
+                    wasRedirected = true;
+                    finalUrl = options.href || options.url;
+                }
+            });
+            
+            // Also check the final URL from the request
+            if (response.request && response.request.res && response.request.res.responseUrl) {
+                finalUrl = response.request.res.responseUrl;
+                if (finalUrl !== normalizedUrl) {
+                    wasRedirected = true;
+                }
+            }
+            
+            // Check if we were redirected to the homepage (indicates private profile)
+            if (wasRedirected) {
+                if (finalUrl.includes('cloudskillsboost.google/') && !finalUrl.includes('public_profiles')) {
+                    console.log(`  🔒 Profile redirected from ${normalizedUrl} to ${finalUrl} - PRIVATE`);
+                    throw new Error('PROFILE_PRIVATE: Redirected to homepage');
+                }
+            }
             
             if (response.status !== 200) {
                 throw new Error(`HTTP ${response.status}: Failed to fetch profile`);
@@ -65,6 +95,11 @@ class ProfileFetcher {
             return response.data;
 
         } catch (error) {
+            // Check if it's our private profile error
+            if (error.message && error.message.includes('PROFILE_PRIVATE')) {
+                throw error;
+            }
+            
             if (error.response) {
                 // HTTP error response
                 throw new Error(`HTTP ${error.response.status}: ${error.response.statusText}`);
@@ -170,7 +205,10 @@ class ProfileFetcher {
             'profile is not public',
             'Profile not available',
             'This user has made their profile private',
-            'private profile'
+            'private profile',
+            'Sorry, access denied to this resource',
+            'access denied',
+            'Please sign in to access this content'
         ];
         
         const bodyText = $('body').text().toLowerCase();

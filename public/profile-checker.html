@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Accessibility Checker - Cloud Study Jams</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="profile-checker.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🔍 Profile Accessibility Checker</h1>
+            <p class="subtitle">Upload CSV to check if profiles are public or private (enrollment not checked)</p>
+            <a href="index.html" class="back-link">← Back to Calculator</a>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="upload-section card">
+            <h2>📤 Upload Participant CSV</h2>
+            <p class="help-text">
+                <strong>📋 Expected format:</strong> <br>
+                <strong>Column A:</strong> Name | <strong>Column B:</strong> Email | <strong>Column C:</strong> Profile URL<br>
+                <br>
+                <strong>ℹ️ Note:</strong> This tool only checks if profiles are <strong>publicly accessible</strong> or <strong>private</strong>. 
+                It does NOT verify enrollment status.
+            </p>
+            
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="csvFileInput" accept=".csv" hidden>
+                <div class="upload-prompt">
+                    <span class="upload-icon">📁</span>
+                    <p>Click to select CSV file or drag and drop here</p>
+                    <small>Accepts .csv files only</small>
+                </div>
+            </div>
+
+            <div id="fileInfo" class="file-info" style="display: none;">
+                <span class="file-name"></span>
+                <button class="btn btn-secondary" id="clearFileBtn">Clear</button>
+            </div>
+
+            <button class="btn btn-primary" id="checkAccessibilityBtn" disabled>
+                <span class="btn-text">Check Profile Accessibility</span>
+                <span class="spinner" style="display: none;">⏳</span>
+            </button>
+        </section>
+
+        <!-- Progress Section -->
+        <section id="progressSection" class="progress-section card" style="display: none;">
+            <h2>⏳ Checking Profiles...</h2>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">0 / 0 profiles checked</div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="results-section" style="display: none;">
+            
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card success-card">
+                    <div class="card-icon">✅</div>
+                    <div class="card-content">
+                        <h3 id="accessibleCount">0</h3>
+                        <p>Accessible Profiles</p>
+                    </div>
+                </div>
+
+                <div class="summary-card warning-card">
+                    <div class="card-icon">🔒</div>
+                    <div class="card-content">
+                        <h3 id="privateCount">0</h3>
+                        <p>Private Profiles</p>
+                    </div>
+                </div>
+
+                <div class="summary-card error-card">
+                    <div class="card-icon">❌</div>
+                    <div class="card-content">
+                        <h3 id="errorCount">0</h3>
+                        <p>Failed/Errors</p>
+                    </div>
+                </div>
+
+                <div class="summary-card info-card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-content">
+                        <h3 id="totalCount">0</h3>
+                        <p>Total Profiles</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Accessible Profiles -->
+            <div class="result-category" id="accessibleSection">
+                <h2 class="category-title success-title">
+                    ✅ Accessible Profiles (<span id="accessibleCountDetail">0</span>)
+                    <button class="toggle-btn" onclick="toggleSection('accessibleList')">▼</button>
+                </h2>
+                <div id="accessibleList" class="profile-list"></div>
+            </div>
+
+            <!-- Private Profiles -->
+            <div class="result-category" id="privateSection">
+                <h2 class="category-title warning-title">
+                    🔒 Private Profiles (<span id="privateCountDetail">0</span>)
+                    <button class="toggle-btn" onclick="toggleSection('privateList')">▼</button>
+                </h2>
+                <div id="privateList" class="profile-list"></div>
+            </div>
+
+            <!-- Error Profiles -->
+            <div class="result-category" id="errorSection">
+                <h2 class="category-title error-title">
+                    ❌ Failed/Error Profiles (<span id="errorCountDetail">0</span>)
+                    <button class="toggle-btn" onclick="toggleSection('errorList')">▼</button>
+                </h2>
+                <div id="errorList" class="profile-list"></div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="export-section card">
+                <h3>📥 Export Results</h3>
+                <div class="export-buttons">
+                    <button class="btn btn-outline" id="exportJSONBtn">
+                        📄 Export as JSON
+                    </button>
+                    <button class="btn btn-outline" id="exportCSVBtn">
+                        📊 Export as CSV
+                    </button>
+                    <button class="btn btn-outline" id="copyPrivateBtn">
+                        📋 Copy Private Profile Names
+                    </button>
+                    <button class="btn btn-outline" id="copyErrorBtn">
+                        📋 Copy Error Profile Names
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="profile-checker.js"></script>
+</body>
+</html>

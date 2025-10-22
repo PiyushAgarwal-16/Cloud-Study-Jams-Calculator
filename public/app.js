@@ -16,7 +16,46 @@ class SkillsBoostCalculator {
     init() {
         this.bindEvents();
         this.setupTabSwitching();
+        this.initCountdownTimer();
         console.log('🚀 Google Cloud Skills Boost Calculator initialized');
+    }
+
+    /**
+     * Initialize and start the countdown timer
+     */
+    initCountdownTimer() {
+        // Program ends on October 31, 2025 at 11:59:59 PM IST (India Standard Time)
+        // IST is UTC+5:30
+        const endDate = new Date('2025-10-31T23:59:59+05:30');
+        
+        const updateCountdown = () => {
+            const now = new Date();
+            const timeLeft = endDate - now;
+            
+            if (timeLeft <= 0) {
+                // Program has ended
+                document.getElementById('countdownTimer').innerHTML = 
+                    '<div class="countdown-expired">⏰ Program Ended!</div>';
+                clearInterval(this.countdownInterval);
+                return;
+            }
+            
+            // Calculate time units
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+            // Update DOM
+            document.getElementById('days').textContent = String(days).padStart(2, '0');
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        };
+        
+        // Update immediately and then every second
+        updateCountdown();
+        this.countdownInterval = setInterval(updateCountdown, 1000);
     }
 
     /**

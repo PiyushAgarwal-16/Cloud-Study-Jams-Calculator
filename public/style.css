@@ -154,6 +154,107 @@ body {
     z-index: 1;
 }
 
+/* Countdown Timer */
+.countdown-container {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    border-radius: var(--border-radius);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+}
+
+.countdown-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--white);
+    text-align: center;
+    margin-bottom: var(--spacing-xs);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.countdown-timer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.countdown-segment {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 55px;
+}
+
+.countdown-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 6px var(--spacing-sm);
+    border-radius: var(--border-radius);
+    min-width: 55px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.countdown-unit {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-top: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.countdown-separator {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+    opacity: 0.6;
+    margin: 0 2px;
+}
+
+.countdown-expired {
+    text-align: center;
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: #ff6b6b;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+    .countdown-value {
+        font-size: 1.5rem;
+        min-width: 50px;
+        padding: 4px 8px;
+    }
+    
+    .countdown-segment {
+        min-width: 50px;
+    }
+    
+    .countdown-separator {
+        font-size: 1.25rem;
+        margin: 0 2px;
+    }
+    
+    .countdown-unit {
+        font-size: 0.6rem;
+    }
+    
+    .countdown-container {
+        padding: var(--spacing-sm);
+    }
+}
+
 .creator {
     font-size: var(--font-size-sm);
     opacity: 0.95;

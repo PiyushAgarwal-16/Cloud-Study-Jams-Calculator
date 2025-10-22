@@ -44,6 +44,21 @@ class SkillsBoostCalculator {
         document.getElementById('userEmail').addEventListener('input', (e) => {
             this.validateEmail(e.target);
         });
+
+        // Track Piyush Agarwal link clicks with Google Analytics
+        const creatorLink = document.getElementById('creatorLink');
+        if (creatorLink) {
+            creatorLink.addEventListener('click', () => {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'creator_link_click', {
+                        'event_category': 'outbound_link',
+                        'event_label': 'LinkedIn - Piyush Agarwal',
+                        'transport_type': 'beacon',
+                        'value': 1
+                    });
+                }
+            });
+        }
     }
 
     /**
@@ -106,6 +121,15 @@ class SkillsBoostCalculator {
         if (!this.isValidEmail(userEmail)) {
             this.showError('Please enter a valid email address');
             return;
+        }
+
+        // Track Calculate Points button click with Google Analytics
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'calculate_points_click', {
+                'event_category': 'engagement',
+                'event_label': 'Calculate Points Button',
+                'value': 1
+            });
         }
 
         try {

@@ -25,7 +25,7 @@
             <a href="https://docs.google.com/spreadsheets/d/1oRxxuOzsZaBhH73LKpECkP7lBjpqruAu5ONWivn_PvA/edit?usp=sharing" target="_blank" rel="noopener noreferrer" class="solution-sheet-btn">
                 📋 Solution Sheet
             </a>
-            <p class="creator">Created by: <a href="https://www.linkedin.com/in/piyush-agarwal-079019345/" target="_blank" rel="noopener noreferrer">Piyush Agarwal</a></p>
+            <p class="creator">Created by: <a id="creatorLink" href="https://www.linkedin.com/in/piyush-agarwal-079019345/" target="_blank" rel="noopener noreferrer">Piyush Agarwal</a></p>
         </header>
 
         <main class="main">
@@ -183,7 +183,11 @@
     <script src="app.js"></script>
     <script type="module">
         import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1/dist/index.mjs';
+        import { track } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1/dist/index.mjs';
         inject();
+        
+        // Make track function available globally
+        window.vaTrack = track;
     </script>
 </body>
 </html>

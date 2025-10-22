@@ -190,18 +190,23 @@ body {
 
 .creator a {
     color: var(--white);
-    text-decoration: none;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.5);
+    text-underline-offset: 3px;
     font-weight: 600;
     border-bottom: 2px solid transparent;
     transition: all var(--transition-normal);
     padding: 4px 8px;
     border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
 }
 
 .creator a:hover {
     border-bottom-color: var(--white);
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.25);
     transform: translateY(-2px);
+    text-decoration-color: var(--white);
 }
 
 .main {

@@ -8,7 +8,12 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-C0MMVCYTBC');
+      gtag('config', 'G-C0MMVCYTBC', {
+        'send_page_view': true,
+        'cookie_flags': 'SameSite=None;Secure'
+      });
+      
+      console.log('✅ Google Analytics initialized');
     </script>
     
     <meta charset="UTF-8">

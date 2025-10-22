@@ -50,12 +50,14 @@ class SkillsBoostCalculator {
         if (creatorLink) {
             creatorLink.addEventListener('click', () => {
                 if (typeof gtag !== 'undefined') {
-                    gtag('event', 'creator_link_click', {
-                        'event_category': 'outbound_link',
-                        'event_label': 'LinkedIn - Piyush Agarwal',
-                        'transport_type': 'beacon',
-                        'value': 1
+                    gtag('event', 'click', {
+                        event_category: 'outbound_link',
+                        event_label: 'LinkedIn - Piyush Agarwal',
+                        link_url: creatorLink.href,
+                        link_domain: 'linkedin.com',
+                        value: 1
                     });
+                    console.log('📊 GA4 Event tracked: click (creator_link)');
                 }
             });
         }
@@ -125,11 +127,13 @@ class SkillsBoostCalculator {
 
         // Track Calculate Points button click with Google Analytics
         if (typeof gtag !== 'undefined') {
-            gtag('event', 'calculate_points_click', {
-                'event_category': 'engagement',
-                'event_label': 'Calculate Points Button',
-                'value': 1
+            gtag('event', 'calculate_points', {
+                event_category: 'engagement',
+                event_label: 'Calculate Points Button',
+                value: 1,
+                user_email_domain: userEmail.split('@')[1] // Track email domain for analytics (privacy-safe)
             });
+            console.log('📊 GA4 Event tracked: calculate_points');
         }
 
         try {
@@ -160,9 +164,29 @@ class SkillsBoostCalculator {
             this.currentResults = results;
             this.displayResults(results);
 
+            // Track successful calculation
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'calculation_success', {
+                    event_category: 'engagement',
+                    event_label: 'Points Calculated Successfully',
+                    value: results.totalPoints || 0
+                });
+                console.log('📊 GA4 Event tracked: calculation_success');
+            }
+
         } catch (error) {
             console.error('Error calculating points:', error);
             this.showError(error.message || 'An error occurred while calculating points');
+            
+            // Track calculation error
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'calculation_error', {
+                    event_category: 'error',
+                    event_label: error.message || 'Unknown error',
+                    value: 0
+                });
+                console.log('📊 GA4 Event tracked: calculation_error');
+            }
         }
     }
 
